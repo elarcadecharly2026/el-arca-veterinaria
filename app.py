@@ -27,7 +27,7 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 # ===============================
 # BASE DE DATOS (SOLO POSTGRESQL)
 # ===============================
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = os.environ.get("postgresql://arca_db_hvbw_user:151dlFPawRCi435QUghwtyOrWpxngWl7@dpg-d6j4fd24d50c73eevrgg-a/arca_db_hvbw")
 if not DATABASE_URL:
     raise RuntimeError("arca_db_hvbw")
 
