@@ -10,13 +10,8 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
 from datetime import datetime
 
-
-
-import os
-from flask import Flask
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
 from dotenv import load_dotenv
+from urllib.parse import quote_plus
 
 load_dotenv()
 
@@ -25,18 +20,14 @@ app = Flask(__name__)
 # ===============================
 # CONFIGURACIÓN SEGURA
 # ===============================
-
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
-
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 # ===============================
 # BASE DE DATOS (SOLO POSTGRESQL)
 # ===============================
-
 DATABASE_URL = os.environ.get("DATABASE_URL")
-
 if not DATABASE_URL:
     raise RuntimeError("arca_db_hvbw")
 
@@ -71,6 +62,7 @@ def require_roles(*roles):
             return fn(*args, **kwargs)
         return wrapper
     return deco
+
 # =========== PARA IMAGEN DE PRODUCTOS EN INVENTARIO ==========#
 UPLOAD_FOLDER = 'static/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -79,7 +71,10 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # ================== Models ==================
+Base = declarative_base()
+
 class User(Base, UserMixin):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
@@ -103,8 +98,6 @@ class Product(Base):
     dog_size = Column(String(10), default='M')  # S, M, L, XL
     image = Column(String(200))  # ← nuevo campo para la imagen
     caducidad = Column(DateTime) 
-
-    
 
 class Sale(Base):
     __tablename__ = "sales"
@@ -233,13 +226,13 @@ class Owner(Base):
     city = Column(String(50))
     phone = Column(String(20))
     notes = Column(Text)
-    pets = relationship("Pet", back_populates="owner")  # Relación uno-a-muchos [web:34][web:37]
+    pets = relationship("Pet", back_populates="owner")  # Relación uno-a-muchos 
 
 class Pet(Base):
     __tablename__ = 'pets'
     id = Column(Integer, primary_key=True)
     name = Column(String(200), nullable=False)
-    # Elimina owner_name: redundante y propenso a errores [web:1]
+    # Elimina owner_name: redundante y propenso a errores 
     breed = Column(String(200))
     color = Column(String(100))
     size = Column(String(20), default='M')
@@ -251,7 +244,7 @@ class Pet(Base):
     created_at = Column(DateTime, default=func.now())
     owner_id = Column(Integer, ForeignKey('owners.id'), nullable=False)  # No nullable
     records = relationship("ClinicalRecord", back_populates="pet", order_by="ClinicalRecord.date.desc()")
-    owner = relationship("Owner", back_populates="pets")  # Relación muchos-a-uno [web:34][web:6]
+    owner = relationship("Owner", back_populates="pets")  # Relación muchos-a-uno 
 
 
 class DocumentoMascota(Base):
@@ -261,7 +254,7 @@ class DocumentoMascota(Base):
     pet_id = Column(Integer, ForeignKey('pets.id'), nullable=False)
     tipo_documento = Column(String(120), nullable=False)
     ruta_archivo = Column(String(255), nullable=False)
-    fecha_carga = Column(DateTime, default=datetime.utcnow)
+    fecha_carga = Column(DateTime, default= datetime.utcnow)
     owner = relationship('Owner')
     pet = relationship('Pet')
 
@@ -272,9 +265,6 @@ class DocumentoMascota(Base):
     @property
     def mascota(self):
         return self.pet
-
-
-
 
 class ClinicalRecord(Base):
     __tablename__ = 'clinical_records'
@@ -394,10 +384,10 @@ def citaeditar(citaid):
             cita.motivo = request.form.get('motivo') or ''
             cita.tipo = request.form.get('tipo') or 'Consulta'
             cita.vet = request.form.get('vet') or ''
-            cita.petid = int(request.form.get('petid'))
+            cita.pet_id = int(request.form.get('petid'))  # Corrección aquí: pet_id en lugar de petid
             
             db.commit()
-            enviarrecordatoriowhatsapp(cita, db)  # Reenvía recordatorio actualizado
+            # enviarrecordatoriowhatsapp(cita, db)  # Reenvía recordatorio actualizado, descomenta si existe
             flash('Cita actualizada correctamente.', 'success')
             return redirect(url_for('citas'))
         
@@ -431,9 +421,6 @@ def cita_delete(cita_id):
     finally:
         db.close()
     return redirect(url_for("citas"))
-
-
-from urllib.parse import quote_plus
 
 def enviar_recordatorio_whatsapp(cita, db):
     try:
@@ -520,7 +507,7 @@ def nueva_mascota():
             
             if not all([pet_name, species, sex, owner_name]):
                 flash('Faltan campos obligatorios: nombre mascota, especie, sexo o dueño.', 'error')
-                return render_template('pet_form.html')  # ← RETORNA AQUÍ [web:92]
+                return render_template('pet_form.html')  # ← RETORNA AQUÍ 
             
             owner = Owner(
                 name=owner_name,
@@ -730,10 +717,9 @@ def contacts_list():
                     Contact.name.ilike(like),
                     Contact.phone.ilike(like),
                     Contact.email.ilike(like),
-                    Supplier.name.ilike(like)      # ← búsqueda por proveedor
+                    Supplier.name.ilike(like) # ← búsqueda por proveedor
                 )
             )
-
         contacts = base.order_by(Contact.name).all()
         return render_template("contacts_list.html", contacts=contacts, q=q)
     finally:
@@ -741,7 +727,6 @@ def contacts_list():
 
 # ================== Routes: Autorizaciones ==================
 from sqlalchemy.orm import joinedload
-
 @app.route('/autorizaciones')
 @login_required
 def autho():
@@ -758,15 +743,12 @@ def autho():
         # IMPORTANTE: Accede a los datos AQUÍ, mientras la sesión está abierta
         # Esto "activa" los datos relacionados
         for doc in documentos:
-            _ = doc.owner  # Fuerza la carga
-            _ = doc.pet    # Fuerza la carga
+            _ = doc.owner # Fuerza la carga
+            _ = doc.pet # Fuerza la carga
         
         return render_template('autho.html', documentos=documentos)
     finally:
         db.close()
-
-
-
 
 @app.route('/documentos')
 @login_required
@@ -782,32 +764,27 @@ def documentos():
     finally:
         db.close()
 
+
 from mimetypes import guess_type
 from flask import send_from_directory, abort
 import os
-
 @app.route('/documentos/<int:doc_id>/preview')
 def documentos_preview(doc_id):
     db = SessionLocal()
     try:
-        doc = db.get(DocumentoMascota, doc_id)  # Usa DocumentoMascota
+        doc = db.get(DocumentoMascota, doc_id) # Usa DocumentoMascota
         if not doc:
             abort(404, "Documento no encontrado")
-
         if not doc.ruta_archivo:
             abort(404, "No hay archivo asociado")
-
         ruta_absoluta = os.path.abspath(doc.ruta_archivo)
         if not os.path.exists(ruta_absoluta) or not os.path.isfile(ruta_absoluta):
             abort(404, "Archivo no encontrado en el servidor")
-
         directorio_base = os.path.dirname(ruta_absoluta)
         nombre_archivo = os.path.basename(ruta_absoluta)
-
         mimetype, _ = guess_type(ruta_absoluta)
         if not mimetype:
             mimetype = 'application/octet-stream'
-
         return send_from_directory(
             directorio_base,
             nombre_archivo,
@@ -817,12 +794,9 @@ def documentos_preview(doc_id):
     finally:
         db.close()
 
-
-
 @app.route('/documentos/crear', methods=['GET', 'POST'])
 @login_required
 def documentos_crear():
-
     db = SessionLocal()
     try:
         if request.method == 'POST':
@@ -872,11 +846,9 @@ def documentos_crear():
         db.close()
 
 # ================== Routes: Documentos (CRUD Completo) ==================
-
 @app.route('/documentos/<int:doc_id>/editar', methods=['GET', 'POST'])
 @login_required
 def documentos_editar(doc_id):
-
     db = SessionLocal()
     try:
         doc = db.query(DocumentoMascota)\
@@ -914,15 +886,14 @@ def documentos_editar(doc_id):
         doc_owner_name = doc.owner.name if doc.owner else "—"
         doc_pet_name = doc.pet.name if doc.pet else "—"
         
-        return render_template('editar_documento.html', 
-                             doc=doc, 
+        return render_template('editar_documento.html',
+                             doc=doc,
                              doc_owner_name=doc_owner_name,
                              doc_pet_name=doc_pet_name,
-                             owners=owners, 
+                             owners=owners,
                              pets=pets)
     finally:
         db.close()
-
 
 @app.route('/documentos/<int:doc_id>/eliminar', methods=['POST'])
 @login_required
@@ -959,8 +930,6 @@ def documentos_eliminar(doc_id):
     
     return redirect(url_for('documentos'))
 
-
-
 @app.route('/documentos/<int:doc_id>/descargar')
 @login_required
 def documentos_descargar(doc_id):
@@ -976,15 +945,13 @@ def documentos_descargar(doc_id):
             return redirect(url_for('documentos'))
     finally:
         db.close()
-        pass
 
 
 @app.route('/static/downloads/<filename>')
 @login_required
-def download_pdf(filename):  # ← Solo 'filename', NO ruta completa
+def download_pdf(filename): # ← Solo 'filename', NO ruta completa
     """Descarga PDF específico para autorizaciones"""
     return send_from_directory('static/downloads', filename, as_attachment=True)
-
 
 # ================== Helpers ==================
 def audit(action, entity, payload=None):
@@ -1083,7 +1050,6 @@ def inventory_list():
     finally:
         db.close()
 
-
 @app.route("/inventory/new", methods=["GET","POST"])
 @login_required
 @require_roles("admin","staff")
@@ -1099,12 +1065,10 @@ def inventory_new():
                     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                     file.save(filepath)
                     image_filename = filename
-
             caducidad_str = (request.form.get("caducidad") or "").strip()
             caducidad = None
             if caducidad_str:
                 caducidad = datetime.strptime(caducidad_str, "%Y-%m-%d").date()
-
             p = Product(
                 image=image_filename,
                 code=(request.form.get("code") or "").strip(),
@@ -1125,8 +1089,6 @@ def inventory_new():
             db.close()
     return render_template("inventory_form.html", item=None)
 
-
-
 @app.route("/inventory/<int:pid>/edit", methods=["GET","POST"])
 @login_required
 @require_roles("admin","staff")
@@ -1142,12 +1104,10 @@ def inventory_edit(pid):
             p.price = float(request.form.get("price") or 0)
             p.quantity = float(request.form.get("quantity") or 0)
             p.notes = (request.form.get("notes") or "").strip()
-
             caducidad_str = (request.form.get("caducidad") or "").strip()
             p.caducidad = None
             if caducidad_str:
                 p.caducidad = datetime.strptime(caducidad_str, "%Y-%m-%d").date()
-
             db.commit()
             audit("update_product","inventory",{"id":p.id,"code":p.code})
             flash("Producto actualizado","success")
@@ -1231,7 +1191,7 @@ def add_inventory():
     if 'image' in request.files:
         file = request.files['image']
         if file.filename != '':
-            filename = secure.filename(file.filename)
+            filename = secure_filename(file.filename)
             path = os.path.join('static/uploads/', filename)
             file.save(path)
             # Guarda 'path' en BD
@@ -1586,7 +1546,392 @@ def hardware_open_drawer():
     return redirect(url_for("admin_hardware"))
 
 # ================== NUEVAS RUTAS: Suppliers & Contacts ==================
+@app.route("/suppliers")
+@login_required
+def suppliers_list():
+    """Lista de proveedores con búsqueda"""
+    db = SessionLocal()
+    try:
+        q = (request.args.get("q") or "").strip()
+        base = db.query(Supplier)
+        if q:
+            base = base.filter(
+                (Supplier.name.ilike(f"%{q}%")) | 
+                (Supplier.rfc.ilike(f"%{q}%")) |
+                (Supplier.email.ilike(f"%{q}%"))
+            )
+        suppliers = base.order_by(Supplier.name).all()
+        return render_template("suppliers_list.html", suppliers=suppliers, q=q)
+    finally:
+        db.close()
 
+
+@app.route("/suppliers/new", methods=["GET", "POST"])
+@login_required
+@require_roles("admin", "staff")
+def suppliers_new():
+    """Crear nuevo proveedor"""
+    if request.method == "POST":
+        db = SessionLocal()
+        try:
+            s = Supplier(
+                name=(request.form.get("name") or "").strip(),
+                rfc=(request.form.get("rfc") or "").strip(),
+                email=(request.form.get("email") or "").strip(),
+                phone=(request.form.get("phone") or "").strip(),
+                address=(request.form.get("address") or "").strip(),
+                city=(request.form.get("city") or "").strip(),
+                notes=(request.form.get("notes") or "").strip()
+            )
+            db.add(s)
+            db.commit()
+            audit("create_supplier", "suppliers", {"id": s.id, "name": s.name})
+            flash("Proveedor creado exitosamente", "success")
+            return redirect(url_for("suppliers_list"))
+        except Exception as e:
+            db.rollback()
+            flash(f"Error: {e}", "error")
+        finally:
+            db.close()
+    return render_template("supplier_form.html", supplier=None)
+
+
+@app.route("/suppliers/<int:sid>/edit", methods=["GET", "POST"])
+@login_required
+@require_roles("admin", "staff")
+def suppliers_edit(sid):
+    """Editar proveedor"""
+    db = SessionLocal()
+    try:
+        s = db.get(Supplier, sid) or abort(404)
+        if request.method == "POST":
+            s.name = (request.form.get("name") or "").strip()
+            s.rfc = (request.form.get("rfc") or "").strip()
+            s.email = (request.form.get("email") or "").strip()
+            s.phone = (request.form.get("phone") or "").strip()
+            s.address = (request.form.get("address") or "").strip()
+            s.city = (request.form.get("city") or "").strip()
+            s.notes = (request.form.get("notes") or "").strip()
+            db.commit()
+            audit("update_supplier", "suppliers", {"id": s.id, "name": s.name})
+            flash("Proveedor actualizado", "success")
+            return redirect(url_for("suppliers_list"))
+        return render_template("supplier_form.html", supplier=s)
+    finally:
+        db.close()
+
+
+@app.post("/suppliers/<int:sid>/delete")
+@login_required
+@require_roles("admin")
+def suppliers_delete(sid):
+    """Eliminar proveedor"""
+    db = SessionLocal()
+    try:
+        s = db.get(Supplier, sid) or abort(404)
+        name = s.name
+        db.delete(s)
+        db.commit()
+        audit("delete_supplier", "suppliers", {"id": sid, "name": name})
+        flash("Proveedor eliminado", "success")
+    finally:
+        db.close()
+    return redirect(url_for("suppliers_list"))
+
+
+@app.get("/api/supplier/<int:sid>")
+@login_required
+def api_supplier_detail(sid):
+    """API para obtener detalles de proveedor (JSON)"""
+    db = SessionLocal()
+    try:
+        s = db.get(Supplier, sid) or abort(404)
+        data = s.to_dict()
+        data['contacts'] = [c.to_dict() for c in s.contacts]
+        return jsonify(data)
+    finally:
+        db.close()
+
+
+@app.route("/suppliers/<int:sid>/contacts/new", methods=["GET", "POST"])
+@login_required
+@require_roles("admin", "staff")
+def contact_new(sid):
+    """Crear nuevo contacto para un proveedor"""
+    db = SessionLocal()
+    try:
+        s = db.get(Supplier, sid) or abort(404)
+        if request.method == "POST":
+            c = Contact(
+                supplier_id=sid,
+                name=(request.form.get("name") or "").strip(),
+                phone=(request.form.get("phone") or "").strip(),
+                email=(request.form.get("email") or "").strip(),
+                position=(request.form.get("position") or "").strip(),
+                notes=(request.form.get("notes") or "").strip()
+            )
+            db.add(c)
+            db.commit()
+            audit("create_contact", "contacts", {"id": c.id, "supplier_id": sid})
+            flash("Contacto agregado", "success")
+            return redirect(url_for("suppliers_list"))
+        return render_template("contact_form.html", supplier=s, contact=None)
+    finally:
+        db.close()
+
+
+@app.route("/suppliers/<int:sid>/contacts/<int:cid>/edit", methods=["GET", "POST"])
+@login_required
+@require_roles("admin", "staff")
+def contact_edit(sid, cid):
+    """Editar contacto"""
+    db = SessionLocal()
+    try:
+        c = db.get(Contact, cid) or abort(404)
+        s = db.get(Supplier, sid) or abort(404)
+        if request.method == "POST":
+            c.name = (request.form.get("name") or "").strip()
+            c.phone = (request.form.get("phone") or "").strip()
+            c.email = (request.form.get("email") or "").strip()
+            c.position = (request.form.get("position") or "").strip()
+            c.notes = (request.form.get("notes") or "").strip()
+            db.commit()
+            audit("update_contact", "contacts", {"id": cid, "supplier_id": sid})
+            flash("Contacto actualizado", "success")
+            return redirect(url_for("suppliers_list"))
+        return render_template("contact_form.html", supplier=s, contact=c)
+    finally:
+        db.close()
+
+
+@app.post("/suppliers/<int:sid>/contacts/<int:cid>/delete")
+@login_required
+@require_roles("admin")
+def contact_delete(sid, cid):
+    """Eliminar contacto"""
+    db = SessionLocal()
+    try:
+        c = db.get(Contact, cid) or abort(404)
+        db.delete(c)
+        db.commit()
+        audit("delete_contact", "contacts", {"id": cid, "supplier_id": sid})
+        flash("Contacto eliminado", "success")
+    finally:
+        db.close()
+    return redirect(url_for("suppliers_list"))
+
+
+@app.route('/estetica', methods=['GET', 'POST'])
+def estetica():
+    db = SessionLocal()
+    try:
+        # Maneja error de dogsize con fallback seguro
+        small, medium, large, xl = [], [], [], []
+        try:
+            small = db.query(Product).filter_by(dogsize='S').all()
+            medium = db.query(Product).filter_by(dogsize='M').all()
+            large = db.query(Product).filter_by(dogsize='L').all()
+            xl = db.query(Product).filter_by(dogsize='XL').all()
+        except Exception as e:
+            print(f"Error filtrando por dogsize: {e}")
+            # Fallback: todos los productos distribuidos
+            all_prods = db.query(Product).all()
+            # Divide arbitrariamente para no romper el template
+            total = len(all_prods)
+            small = all_prods[:total//4]
+            medium = all_prods[total//4:total//2]
+            large = all_prods[total//2:3*total//4]
+            xl = all_prods[3*total//4:]
+        
+        services = db.query(EsteticaService).order_by(EsteticaService.id.desc()).limit(10).all()
+
+        return render_template(
+            "estetica.html",
+            small=small, medium=medium, large=large, xl=xl,
+            services=services,
+        )
+    finally:
+        db.close()
+
+
+
+@app.route('/estetica/<servicio>', methods=['GET', 'POST'])
+def esteticaform_servicio(servicio):
+    nombres_servicios = {
+        'banos': 'BAÑOS',
+        'banosgarrapaticidas': 'BAÑOS GARRAPATICIDAS',
+        'banomedicado': 'BAÑO MEDICADO',
+        'cortepelo': 'CORTE DE PELO',
+        'deslanado': 'DESLANADO',
+        'banodermatologico': 'BAÑO DERMATOLÓGICO',
+        'extras': 'EXTRAS',
+    }
+    nombre_servicio = nombres_servicios.get(servicio, servicio.upper())
+
+    if request.method == 'POST':     
+        db = SessionLocal()
+        try:
+            print(f"DEBUG: propietario={request.form.get('propietarionombre')}, mascota={request.form.get('mascotanombre')}, servicio={request.form.get('servicio')}")
+            fecha_str = request.form.get('fecha', '').strip()
+            fecha = datetime.strptime(fecha_str, '%Y-%m-%d') if fecha_str else None
+        
+            # Mapeo explícito: form HTML → modelo (corrige desajustes)
+            servicio_obj = EsteticaService(
+                fecha=fecha,
+                propietarionombre=request.form.get('propietarionombre', '').strip(),  # Form sin guión → modelo con guión
+                propietariodireccion=request.form.get('propietariodireccion', '').strip(),
+                propietarionumero=request.form.get('propietarionumero', '').strip(),
+                mascotanombre=request.form.get('mascotanombre', '').strip(),
+                mascotasexo=request.form.get('mascotasexo', '').strip(),
+                mascotaedad=request.form.get('mascotaedad', '').strip(),
+                mascotaraza=request.form.get('mascotaraza', '').strip(),
+                mascotacolor=request.form.get('mascotacolor', '').strip(),
+                mascotatamano=float(request.form.get('mascotatamano', 0) or 0),
+                observaciones=request.form.get('observaciones', '').strip(),
+                servicio=(request.form.get('servicio') or nombre_servicio).strip().upper(),  # Prioriza form, fallback nombre_servicio
+                tipocorte=request.form.get('tipocorte', '').strip(),
+                precio=float(request.form.get('precio', 0) or 0)  # Manejo seguro
+                )
+            db.add(servicio_obj) # ← AQUÍ SE AGREGAN
+            db.commit() # ← AQUÍ SE GUARDAN
+            flash(f'Servicio "{servicio_obj.servicio}" guardado', 'success')
+            return redirect(url_for('estetica_servicios'))
+        except ValueError as e:
+            print(f"Guardando: {servicio_obj.servicio}")
+            db.rollback()
+            flash(f'Error fecha/precio: {str(e)}', 'error')
+        except Exception as e:
+            db.rollback()
+            flash(f'Error: {str(e)}', 'error')
+        finally:
+            db.close()
+
+
+    titulo = nombres_servicios.get(servicio, 'SERVICIO')
+    return render_template('estetica_form.html', servicio=servicio, titulo=titulo)
+
+
+@app.route('/estetica/servicios')
+@login_required
+def estetica_servicios():  # Renombrado para coincidir con redirects
+    db = SessionLocal()
+    try:
+        services = db.query(EsteticaService).order_by(EsteticaService.created_at.desc()).all()
+        return render_template('estetica_servicios.html', services=services)
+    finally:
+        db.close()
+
+    
+# ================== Templates routes end ==================
+# Hardware (Windows)
+IS_WINDOWS = platform.system() == "Windows"
+try:
+    import win32print, win32con
+except Exception:
+    win32print = None
+try:
+    import wmi as _wmi
+except Exception:
+    _wmi = None
+try:
+    from serial.tools import list_ports
+except Exception:
+    list_ports = None
+
+def hw_detect_printers():
+    names, default = [], None
+    if IS_WINDOWS and win32print:
+        try:
+            default = win32print.GetDefaultPrinter()
+            for flags in (win32print.PRINTER_ENUM_LOCAL, win32print.PRINTER_ENUM_CONNECTIONS):
+                for p in win32print.EnumPrinters(flags):
+                    names.append(p[2])
+            names = sorted(set(names))
+        except Exception:
+            pass
+    return default, names
+
+def hw_detect_com_ports():
+    if list_ports:
+        return [p.device for p in list_ports.comports()]
+    return []
+
+def hw_list_hid_hint():
+    hint = []
+    if IS_WINDOWS and _wmi:
+        try:
+            c = _wmi.WMI()
+            for d in c.Win32_PnPEntity(PNPClass="HIDClass"):
+                hint.append(d.Name)
+        except Exception:
+            pass
+    return hint
+
+def _send_raw_to_printer(data_bytes: bytes, printer_name: str = None):
+    if not (IS_WINDOWS and win32print):
+        raise RuntimeError("Impresión RAW solo en Windows con pywin32")
+    if not printer_name:
+        printer_name = win32print.GetDefaultPrinter()
+    hPrinter = win32print.OpenPrinter(printer_name)
+    try:
+        hJob = win32print.StartDocPrinter(hPrinter, 1, ("Prueba", None, "RAW"))
+        win32print.StartPagePrinter(hPrinter)
+        win32print.WritePrinter(hPrinter, data_bytes)
+        win32print.EndPagePrinter(hPrinter)
+        win32print.EndDocPrinter(hPrinter)
+    finally:
+        win32print.ClosePrinter(hPrinter)
+
+@app.route("/admin/hardware", methods=["GET"])
+@login_required
+@require_roles("admin")
+def admin_hardware():
+    default_prn, printers = hw_detect_printers()
+    coms = hw_detect_com_ports()
+    hid_list = hw_list_hid_hint()
+    return render_template("admin_hardware.html",
+        default_prn=default_prn, printers=printers,
+        coms=coms, hid_list=hid_list, is_windows=IS_WINDOWS)
+
+@app.post("/admin/hardware/print_test")
+@login_required
+@require_roles("admin")
+def hardware_print_test():
+    if not (IS_WINDOWS and win32print):
+        flash("Solo disponible en Windows con pywin32 instalado", "error")
+        return redirect(url_for("admin_hardware"))
+    prn = request.form.get("printer") or None
+    payload = (
+        b"EL ARCA DE CHARLY\r\n"
+        b"Prueba de impresora\r\n"
+        b"--------------------\r\n"
+        b"OK\r\n\r\n"
+        b"\x1D\x56\x42\x10"
+    )
+    try:
+        _send_raw_to_printer(payload, prn)
+        flash("Impresión enviada","success")
+    except Exception as e:
+        flash(f"Error imprimiendo: {e}", "error")
+    return redirect(url_for("admin_hardware"))
+
+@app.post("/admin/hardware/open_drawer")
+@login_required
+@require_roles("admin")
+def hardware_open_drawer():
+    if not (IS_WINDOWS and win32print):
+        flash("Solo disponible en Windows con pywin32 instalado", "error")
+        return redirect(url_for("admin_hardware"))
+    prn = request.form.get("printer") or None
+    pulse = b"\x1B\x70\x00\x3C\xFF"  # ESC p m t1 t2
+    try:
+        _send_raw_to_printer(pulse, prn)
+        flash("Pulso enviado (cajón)","success")
+    except Exception as e:
+        flash(f"Error abriendo cajón: {e}", "error")
+    return redirect(url_for("admin_hardware"))
+
+# ================== NUEVAS RUTAS: Suppliers & Contacts ==================
 @app.route("/suppliers")
 @login_required
 def suppliers_list():
@@ -1866,5 +2211,3 @@ def estetica_servicios():  # Renombrado para coincidir con redirects
 # ================== Templates routes end ==================
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
-
-
