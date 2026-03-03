@@ -1,0 +1,52 @@
+cd "C:\Users\leydi\Downloads\El_Arca_De_Charly_FINAL_v3"
+
+python -m venv .venv
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
+
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+pip install pywin32 wmi pyserial
+
+pip3 install google-auth-oauthlib
+
+pip3 install google-api-python-client
+
+python app.py
+__________________________________________________________________
+
+*Caducidad
+Si está bien agregar otra columna
+
+*Descontar los productos en automático se supone que yo lo active solo sería revisar que si se descuenten
+
+Datos de la Mascota
+nombre
+Especie(Felina-canina)
+Raza
+Sexo
+Edad
+Color
+Observaciones
+
+Datos del Dueño
+Nombre
+Dirección
+CP
+Teléfono
+Ciudad
+Observaciones
+
+Historial Clínico
+Peso
+Talla
+Temperatura
+Desparasitado
+Vacunado
+Cirugía
+Última cirugía
+
+
+cliente/mascota/opción para subir archivo(documento) que se guarda en base dedatos
