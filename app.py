@@ -27,15 +27,14 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 # ===============================
 # BASE DE DATOS (SOLO POSTGRESQL)
 # ===============================
-DATABASE_URL = os.environ.get("postgresql://arca_db_hvbw_user:151dlFPawRCi435QUghwtyOrWpxngWl7@dpg-d6j4fd24d50c73eevrgg-a/arca_db_hvbw")
+DATABASE_URL = os.environ.get("DATABASE_URL")  # ← SOLO el nombre de la variable
 if not DATABASE_URL:
-    raise RuntimeError("arca_db_hvbw")
+    raise RuntimeError("Falta DATABASE_URL en variables de entorno")
 
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True
 )
-
 SessionLocal = scoped_session(sessionmaker(bind=engine))
 
 # ================== Login ==================
