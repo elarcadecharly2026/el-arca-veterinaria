@@ -1496,36 +1496,6 @@ def _send_raw_to_printer(data_bytes: bytes, printer_name: str = None):
         win32print.ClosePrinter(hPrinter)
 
 # ================== NUEVAS RUTAS: Suppliers & Contacts ==================
-@app.route("/suppliers/new", methods=["GET", "POST"])
-@login_required
-@require_roles("admin", "staff")
-def suppliers_new():
-    """Crear nuevo proveedor"""
-    if request.method == "POST":
-        db = SessionLocal()
-        try:
-            s = Supplier(
-                name=(request.form.get("name") or "").strip(),
-                rfc=(request.form.get("rfc") or "").strip(),
-                email=(request.form.get("email") or "").strip(),
-                phone=(request.form.get("phone") or "").strip(),
-                address=(request.form.get("address") or "").strip(),
-                city=(request.form.get("city") or "").strip(),
-                notes=(request.form.get("notes") or "").strip()
-            )
-            db.add(s)
-            db.commit()
-            audit("create_supplier", "suppliers", {"id": s.id, "name": s.name})
-            flash("Proveedor creado exitosamente", "success")
-            return redirect(url_for("suppliers_list"))
-        except Exception as e:
-            db.rollback()
-            flash(f"Error: {e}", "error")
-        finally:
-            db.close()
-    return render_template("supplier_form.html", supplier=None)
-
-
 @app.route("/suppliers/<int:sid>/edit", methods=["GET", "POST"])
 @login_required
 @require_roles("admin", "staff")
