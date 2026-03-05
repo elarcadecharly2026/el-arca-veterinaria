@@ -1496,26 +1496,6 @@ def _send_raw_to_printer(data_bytes: bytes, printer_name: str = None):
         win32print.ClosePrinter(hPrinter)
 
 # ================== NUEVAS RUTAS: Suppliers & Contacts ==================
-@app.route("/suppliers")
-@login_required
-def suppliers_list():
-    """Lista de proveedores con búsqueda"""
-    db = SessionLocal()
-    try:
-        q = (request.args.get("q") or "").strip()
-        base = db.query(Supplier)
-        if q:
-            base = base.filter(
-                (Supplier.name.ilike(f"%{q}%")) | 
-                (Supplier.rfc.ilike(f"%{q}%")) |
-                (Supplier.email.ilike(f"%{q}%"))
-            )
-        suppliers = base.order_by(Supplier.name).all()
-        return render_template("suppliers_list.html", suppliers=suppliers, q=q)
-    finally:
-        db.close()
-
-
 @app.route("/suppliers/new", methods=["GET", "POST"])
 @login_required
 @require_roles("admin", "staff")
