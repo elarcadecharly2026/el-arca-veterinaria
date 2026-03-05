@@ -1494,19 +1494,6 @@ def _send_raw_to_printer(data_bytes: bytes, printer_name: str = None):
         win32print.EndDocPrinter(hPrinter)
     finally:
         win32print.ClosePrinter(hPrinter)
-
-# ================== NUEVAS RUTAS: Suppliers & Contacts ==================
-@app.route('/estetica/servicios')
-@login_required
-def estetica_servicios():  # Renombrado para coincidir con redirects
-    db = SessionLocal()
-    try:
-        services = db.query(EsteticaService).order_by(EsteticaService.created_at.desc()).all()
-        return render_template('estetica_servicios.html', services=services)
-    finally:
-        db.close()
-
-    
 # ================== Templates routes end ==================
 # Hardware (Windows)
 IS_WINDOWS = platform.system() == "Windows"
