@@ -1495,27 +1495,6 @@ def _send_raw_to_printer(data_bytes: bytes, printer_name: str = None):
     finally:
         win32print.ClosePrinter(hPrinter)
 
-@app.post("/admin/hardware/print_test")
-@login_required
-@require_roles("admin")
-def hardware_print_test():
-    if not (IS_WINDOWS and win32print):
-        flash("Solo disponible en Windows con pywin32 instalado", "error")
-        return redirect(url_for("admin_hardware"))
-    prn = request.form.get("printer") or None
-    payload = (
-        b"EL ARCA DE CHARLY\r\n"
-        b"Prueba de impresora\r\n"
-        b"--------------------\r\n"
-        b"OK\r\n\r\n"
-        b"\x1D\x56\x42\x10"
-    )
-    try:
-        _send_raw_to_printer(payload, prn)
-        flash("Impresión enviada","success")
-    except Exception as e:
-        flash(f"Error imprimiendo: {e}", "error")
-    return redirect(url_for("admin_hardware"))
 
 @app.post("/admin/hardware/open_drawer")
 @login_required
