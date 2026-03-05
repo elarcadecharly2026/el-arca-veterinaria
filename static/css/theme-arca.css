@@ -13,7 +13,7 @@ body.login{
   display:flex;
   align-items:center;
   justify-content:center;
-  background:linear-gradient(135deg,#dcfce7,#f0fdf4);
+  background:linear-gradient(145deg, rgb(59 130 246 / 47%) 0%, #0f1a31 100%);
 }
 
 .login-card{
