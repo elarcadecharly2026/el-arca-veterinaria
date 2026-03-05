@@ -1496,62 +1496,6 @@ def _send_raw_to_printer(data_bytes: bytes, printer_name: str = None):
         win32print.ClosePrinter(hPrinter)
 
 # ================== NUEVAS RUTAS: Suppliers & Contacts ==================
-@app.route('/estetica/<servicio>', methods=['GET', 'POST'])
-def esteticaform_servicio(servicio):
-    nombres_servicios = {
-        'banos': 'BAÑOS',
-        'banosgarrapaticidas': 'BAÑOS GARRAPATICIDAS',
-        'banomedicado': 'BAÑO MEDICADO',
-        'cortepelo': 'CORTE DE PELO',
-        'deslanado': 'DESLANADO',
-        'banodermatologico': 'BAÑO DERMATOLÓGICO',
-        'extras': 'EXTRAS',
-    }
-    nombre_servicio = nombres_servicios.get(servicio, servicio.upper())
-
-    if request.method == 'POST':     
-        db = SessionLocal()
-        try:
-            print(f"DEBUG: propietario={request.form.get('propietarionombre')}, mascota={request.form.get('mascotanombre')}, servicio={request.form.get('servicio')}")
-            fecha_str = request.form.get('fecha', '').strip()
-            fecha = datetime.strptime(fecha_str, '%Y-%m-%d') if fecha_str else None
-        
-            # Mapeo explícito: form HTML → modelo (corrige desajustes)
-            servicio_obj = EsteticaService(
-                fecha=fecha,
-                propietarionombre=request.form.get('propietarionombre', '').strip(),  # Form sin guión → modelo con guión
-                propietariodireccion=request.form.get('propietariodireccion', '').strip(),
-                propietarionumero=request.form.get('propietarionumero', '').strip(),
-                mascotanombre=request.form.get('mascotanombre', '').strip(),
-                mascotasexo=request.form.get('mascotasexo', '').strip(),
-                mascotaedad=request.form.get('mascotaedad', '').strip(),
-                mascotaraza=request.form.get('mascotaraza', '').strip(),
-                mascotacolor=request.form.get('mascotacolor', '').strip(),
-                mascotatamano=float(request.form.get('mascotatamano', 0) or 0),
-                observaciones=request.form.get('observaciones', '').strip(),
-                servicio=(request.form.get('servicio') or nombre_servicio).strip().upper(),  # Prioriza form, fallback nombre_servicio
-                tipocorte=request.form.get('tipocorte', '').strip(),
-                precio=float(request.form.get('precio', 0) or 0)  # Manejo seguro
-                )
-            db.add(servicio_obj) # ← AQUÍ SE AGREGAN
-            db.commit() # ← AQUÍ SE GUARDAN
-            flash(f'Servicio "{servicio_obj.servicio}" guardado', 'success')
-            return redirect(url_for('estetica_servicios'))
-        except ValueError as e:
-            print(f"Guardando: {servicio_obj.servicio}")
-            db.rollback()
-            flash(f'Error fecha/precio: {str(e)}', 'error')
-        except Exception as e:
-            db.rollback()
-            flash(f'Error: {str(e)}', 'error')
-        finally:
-            db.close()
-
-
-    titulo = nombres_servicios.get(servicio, 'SERVICIO')
-    return render_template('estetica_form.html', servicio=servicio, titulo=titulo)
-
-
 @app.route('/estetica/servicios')
 @login_required
 def estetica_servicios():  # Renombrado para coincidir con redirects
