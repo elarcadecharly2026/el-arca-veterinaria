@@ -24,7 +24,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-
+app = Flask(__name__, static_folder="static", template_folder="templates")
 # ===============================
 # BASE DE DATOS (SOLO POSTGRESQL)
 # ===============================
