@@ -14,7 +14,6 @@ from dotenv import load_dotenv
 from urllib.parse import quote_plus
 
 load_dotenv()
-app.secret_key = os.environ.get('SECRET_KEY')
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
