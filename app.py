@@ -1495,17 +1495,6 @@ def _send_raw_to_printer(data_bytes: bytes, printer_name: str = None):
     finally:
         win32print.ClosePrinter(hPrinter)
 
-@app.route("/admin/hardware", methods=["GET"])
-@login_required
-@require_roles("admin")
-def admin_hardware():
-    default_prn, printers = hw_detect_printers()
-    coms = hw_detect_com_ports()
-    hid_list = hw_list_hid_hint()
-    return render_template("admin_hardware.html",
-        default_prn=default_prn, printers=printers,
-        coms=coms, hid_list=hid_list, is_windows=IS_WINDOWS)
-
 @app.post("/admin/hardware/print_test")
 @login_required
 @require_roles("admin")
