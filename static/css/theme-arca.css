@@ -48,6 +48,8 @@ button.danger{background:#ef4444}
   top:0;
   bottom:0;
   width:260px;
+  min-width:260px;
+  height:100vh;
   background:var(--panel);
   border-right:1px solid #e5e7eb;
   box-shadow:4px 0 20px rgba(0,0,0,0.05);
@@ -102,6 +104,7 @@ button.danger{background:#ef4444}
 
 /* Main */
 .main{
+  flex:1;
   margin-left:260px;
   padding:20px;
 }
