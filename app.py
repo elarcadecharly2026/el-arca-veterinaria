@@ -1495,23 +1495,6 @@ def _send_raw_to_printer(data_bytes: bytes, printer_name: str = None):
     finally:
         win32print.ClosePrinter(hPrinter)
 
-
-@app.post("/admin/hardware/open_drawer")
-@login_required
-@require_roles("admin")
-def hardware_open_drawer():
-    if not (IS_WINDOWS and win32print):
-        flash("Solo disponible en Windows con pywin32 instalado", "error")
-        return redirect(url_for("admin_hardware"))
-    prn = request.form.get("printer") or None
-    pulse = b"\x1B\x70\x00\x3C\xFF"  # ESC p m t1 t2
-    try:
-        _send_raw_to_printer(pulse, prn)
-        flash("Pulso enviado (cajón)","success")
-    except Exception as e:
-        flash(f"Error abriendo cajón: {e}", "error")
-    return redirect(url_for("admin_hardware"))
-
 # ================== NUEVAS RUTAS: Suppliers & Contacts ==================
 @app.route("/suppliers")
 @login_required
