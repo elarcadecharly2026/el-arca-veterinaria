@@ -45,7 +45,7 @@ a{color:var(--acc);text-decoration:none}
 .btn,button{
   background:var(--acc);
   border:none;
-  color:white;
+  color:#211f3a;
   padding:8px 14px;
   border-radius:10px;
   cursor:pointer;
