@@ -43,7 +43,7 @@ a{color:var(--acc);text-decoration:none}
 
 /* Buttons */
 .btn,button{
-  background:var(--acc);
+  background:#96efca;
   border:none;
   color:#211f3a;
   padding:8px 14px;
