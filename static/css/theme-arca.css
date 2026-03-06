@@ -54,7 +54,7 @@ a{color:var(--acc);text-decoration:none}
 }
 
 .btn:hover,button:hover{
-  background:#15803d;
+  background:#3b82f678;
   transform:translateY(-2px);
 }
 
