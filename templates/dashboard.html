@@ -67,7 +67,9 @@
 
 </div>
 
-<!-- 📈 Gráfica -->
+<!-- 📈 GRÁFICA -->
+<canvas id="ventasChart" style="margin-top:20px;"></canvas>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script id="chart-data" type="application/json">
@@ -78,9 +80,15 @@
 </script>
 
 <script>
-const canvas = document.getElementById('ventasChart');
+document.addEventListener("DOMContentLoaded", function () {
 
-if (canvas) {
+    const canvas = document.getElementById('ventasChart');
+
+    if (!canvas) {
+        console.error("Canvas no encontrado");
+        return;
+    }
+
     const raw = document.getElementById('chart-data').textContent;
     const parsed = JSON.parse(raw);
 
@@ -89,17 +97,16 @@ if (canvas) {
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: parsed.labels,
+            labels: parsed.labels || [],
             datasets: [{
                 label: 'Ventas últimos 7 días',
-                data: parsed.data,
+                data: parsed.data || [],
                 tension: 0.4
             }]
         }
     });
-} else {
-    console.error("Canvas no encontrado");
-}
+
+});
 </script>
 
 <!-- 🏆 Top productos -->
