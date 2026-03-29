@@ -13,6 +13,21 @@
     <label>Categoría</label>
     <input name="category" value="{{ item.category if item else '' }}">
 
+    <!-- ✅ NUEVO BLOQUE SAT -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+
+        <div>
+            <label>🧾 Clave SAT</label>
+            <select name="sat_key">
+                <option value="">-- Seleccionar --</option>
+                <option value="H87" {% if item and item.sat_key == 'H87' %}selected{% endif %}>H87 - Pieza</option>
+                <option value="E48" {% if item and item.sat_key == 'E48' %}selected{% endif %}>E48 - Servicio</option>
+                <option value="KGM" {% if item and item.sat_key == 'KGM' %}selected{% endif %}>KGM - Kilogramo</option>
+            </select>
+        </div>
+
+    </div>
+
     <label for="caducidad">Caducidad</label>
     <input type="date" id="caducidad" name="caducidad"
     value="{{ item.caducidad.isoformat() if item and item.caducidad else '' }}">
