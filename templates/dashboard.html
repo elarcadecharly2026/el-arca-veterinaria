@@ -33,21 +33,13 @@
 <div class="grid">
 
 <div class="card">
-<h4>💰 Ventas Hoy</h4>
-<h2>${{ ventas_hoy or 0 }}</h2>
-<p class="{{ 'green' if (crecimiento or 0) >= 0 else 'red' }}">
-{{ crecimiento or 0 }}%
-</p>
+<h4>🧾 Ventas Hoy</h4>
+<h2>{{ ventas_count or 0 }}</h2>
 </div>
 
 <div class="card">
 <h4>📅 Ventas Mes</h4>
 <h2>${{ ventas_mes or 0 }}</h2>
-</div>
-
-<div class="card">
-<h4>🧾 Ventas Hoy</h4>
-<h2>{{ ventas_count or 0 }}</h2>
 </div>
 
 <div class="card">
