@@ -14,6 +14,13 @@
                    value="{{ supplier.name if supplier else '' }}">
         </div>
         
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #333; font-size: 14px;">Teléfono</label>
+            <input maxlength="10" pattern="\d{10}" type="text" name="phone" style="width: 100%; padding: 11px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 14px;"
+                   value="{{ supplier.phone if supplier else '' }}">
+        </div>
+
         <div style="margin-bottom: 20px;">
             <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #333; font-size: 14px;">RFC</label>
             <input maxlength="13" minlength="13" type="text" name="rfc" style="width: 100%; padding: 11px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 14px;"
@@ -24,12 +31,6 @@
             <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #333; font-size: 14px;">Email</label>
             <input type="email" name="email" style="width: 100%; padding: 11px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 14px;"
                    value="{{ supplier.email if supplier else '' }}">
-        </div>
-        
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #333; font-size: 14px;">Teléfono</label>
-            <input maxlength="10" pattern="\d{10}" type="text" name="phone" style="width: 100%; padding: 11px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 14px;"
-                   value="{{ supplier.phone if supplier else '' }}">
         </div>
         
         <div style="margin-bottom: 20px;">
@@ -49,12 +50,12 @@
         </div>
         
         <div style="display: flex; gap: 10px;">
-            <button type="submit" style="font-weight: 700; background-image: linear-gradient(to right, #526e96 0%, #41acb2 51%); margin: 10px; padding: 15px 45px;
+            <button type="submit" style="background-image: linear-gradient(to right, #83a4d4 0%, #b6fbff 51%, #83a4d4 100%); margin: 10px; padding: 15px 45px;
                 text-align: center;text-transform: uppercase;transition: 0.5s;background-size: 200% auto;color: white;box-shadow: 0 0 20px #eee;border-radius: 10px;
                 display: block;outline: none;border: none;">
                 {% if supplier %}💾 Actualizar{% else %}✅ Crear Proveedor{% endif %}
             </button>
-            <a href="{{ url_for('suppliers_list') }}" class="cancel" style="font-weight: 700; linear-gradient(to right, #e5e5e5 0%, #434546 51%);
+            <a href="{{ url_for('suppliers_list') }}" class="cancel" style="background-image: linear-gradient(to right, #8e9eab 0%, #eef2f3 51%, #8e9eab 100%);
                 margin: 10px; padding: 15px 45px; text-align: center; text-transform: uppercase; transition: 0.5s; background-size: 200% auto; color: white;
                 box-shadow: 0 0 20px #eee; border-radius: 10px; display: block; outline: none; border: none;">❌ Cancelar</a>
         </div>
