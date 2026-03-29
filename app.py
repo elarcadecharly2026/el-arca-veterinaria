@@ -1308,45 +1308,69 @@ def venta_item_delete(sale_id, item_id):
 
 
 # ================== Finalizar venta ==================
-
 @app.post('/ventas/<int:sale_id>/finalizar')
 def ventafinalizar(sale_id):
     db = SessionLocal()
     try:
+        from datetime import datetime
+
         sale = db.get(Sale, sale_id) or abort(404)
 
         if sale.status != 'open':
             flash('La venta ya fue cerrada', 'error')
             return redirect(url_for('nueva_venta'))
 
+        # 💳 MÉTODO DE PAGO (NUEVO)
+        metodo_pago = request.form.get("metodo_pago", "efectivo")
+        sale.metodo_pago = metodo_pago
+
+        total = 0
+        ganancia_total = 0
         items_data = []
 
         for it in sale.items:
             prod = db.get(Product, it.product_id)
+
             if prod:
+                # 📦 descontar inventario
                 prod.quantity = max(0.0, (prod.quantity or 0.0) - (it.qty or 0.0))
+
+                # 💰 calcular ganancia
+                costo = prod.cost_price or 0
+                venta = it.price or 0
+                ganancia = (venta - costo) * (it.qty or 0)
+
+                ganancia_total += ganancia
+
+            subtotal = (it.qty or 0) * (it.price or 0)
+            total += subtotal
 
             items_data.append({
                 'product_id': it.product_id,
                 'qty': it.qty
             })
 
-        total = sum((i.qty or 0) * (i.price or 0) for i in sale.items)
+        # 💰 guardar totales
         sale.total = total
+        sale.ganancia = ganancia_total  # 🔥 NUEVO (clave para reportes)
         sale.status = 'done'
+        sale.closed_at = datetime.utcnow()  # 🔥 opcional PRO
 
         db.commit()
 
-        # audit opcional (no rompe si no existe)
+        # 🧾 auditoría
         try:
             audit('finalizesale', 'sales', {
                 'sale_id': sale.id,
+                'total': total,
+                'ganancia': ganancia_total,
+                'metodo_pago': metodo_pago,
                 'items': items_data
             })
         except:
             pass
 
-        flash('Venta finalizada', 'success')
+        flash('Venta finalizada correctamente', 'success')
 
     except Exception as e:
         db.rollback()
@@ -1355,7 +1379,7 @@ def ventafinalizar(sale_id):
     finally:
         db.close()
 
-    return redirect(url_for('nueva_venta'))
+    return redirect(url_for('dashboard'))
 
 
 # ================== Reportes ==================
@@ -1367,20 +1391,20 @@ def reportes():
         hoy = datetime.now().date()
 
         # Ventas del día
-        ventas_dia = db.query(func.sum(SaleItem.qty * SaleItem.price)).filter(
+        ventas_dia = db.query(func.sum(Sale.total)).filter(
             func.date(Sale.created_at) == hoy
         ).scalar() or 0
 
         # Ventas del mes
         mes = datetime.now().month
-        ventas_mes = db.query(func.sum(SaleItem.qty * SaleItem.price)).filter(
+        ventas_mes = db.query(func.sum(Sale.total)).filter(
             func.extract('month', Sale.created_at) == mes
         ).scalar() or 0
 
         # Ventas por empleado
         ventas_empleados = db.query(
             User.email,
-            func.sum(SaleItem.qty * SaleItem.price)
+            func.sum(Sale.total)
         ).join(Sale, Sale.user_id == User.id)\
          .group_by(User.email).all()
 
@@ -2150,36 +2174,3 @@ def authorize_google():
         db.close()
 
     return redirect(url_for("dashboard"))
-
-
-# ===============================
-# POS PRO EXTENSIONS
-# ===============================
-
-def calcular_total(sale):
-    return sum((i.qty or 0) * (i.price or 0) for i in getattr(sale, 'items', []))
-
-@app.route("/ventas/<int:sale_id>/ticket")
-def ticket(sale_id):
-    db = SessionLocal()
-    try:
-        sale = db.get(Sale, sale_id) or abort(404)
-        total = calcular_total(sale)
-        return render_template("ticket.html", sale=sale, total=total)
-    finally:
-        db.close()
-
-@app.route("/corte-caja")
-def corte_caja():
-    db = SessionLocal()
-    try:
-        from sqlalchemy import func
-        from datetime import datetime
-        hoy = datetime.utcnow().date()
-        total = db.query(func.sum(SaleItem.qty * SaleItem.price))\
-            .join(Sale)\
-            .filter(func.date(Sale.created_at) == hoy)\
-            .scalar() or 0
-        return render_template("corte.html", total=total)
-    finally:
-        db.close()
