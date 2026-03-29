@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>📊 Reportes</h2>
+
+<hr>
+
+<h3>Ventas</h3>
+
+<div style="display:flex; gap:50px;">
+  <div>
+    <h4>Hoy</h4>
+    <h2>$ {{ ventas_dia }}</h2>
+  </div>
+
+  <div>
+    <h4>Este mes</h4>
+    <h2>$ {{ ventas_mes }}</h2>
+  </div>
+</div>
+
+<hr>
+
+<h3>Ventas por empleado</h3>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Empleado</th>
+      <th>Total vendido</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for emp in ventas_empleados %}
+    <tr>
+      <td>{{ emp[0] }}</td>
+      <td>$ {{ emp[1] }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<hr>
+
+<h3>Productos más vendidos</h3>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Producto</th>
+      <th>Cantidad vendida</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in productos %}
+    <tr>
+      <td>{{ p[0] }}</td>
+      <td>{{ p[1] }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<br>
+
+<button onclick="window.print()" class="btn btn-primary">
+  Imprimir reporte
+</button>
+
+{% endblock %}

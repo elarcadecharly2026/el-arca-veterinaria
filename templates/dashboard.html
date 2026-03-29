@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Dashboard</h2>
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
+
+  <div class="card">
+    <b>Ventas Hoy</b><br>
+    ${{ ventas_hoy }}
+  </div>
+
+  <div class="card">
+    <b>Ventas Mes</b><br>
+    ${{ ventas_mes }}
+  </div>
+
+  <div class="card">
+    <b>Bajo Stock</b><br>
+    {{ bajo_stock }}
+  </div>
+
+  <div class="card">
+    <b>Productos</b><br>
+    {{ productos }}
+  </div>
+
+</div>
+
+<h3>Productos más vendidos</h3>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Producto</th>
+      <th>Cantidad</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in productos_mas_vendidos %}
+    <tr>
+      <td>{{ p[0] }}</td>
+      <td>{{ p[1] }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<canvas id="ventasChart"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('ventasChart');
+
+const ventasHoy = parseFloat("{{ ventas_hoy or 0 }}");
+const ventasMes = parseFloat("{{ ventas_mes or 0 }}");
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ["Hoy", "Mes"],
+        datasets: [{
+            label: "Ventas",
+            data: [ventasHoy, ventasMes]
+        }]
+    }
+});
+</script>
+
+{% endblock %}

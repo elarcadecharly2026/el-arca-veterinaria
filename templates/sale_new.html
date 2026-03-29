@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Tabs -->
+<ul class="nav nav-tabs">
+  <li><a class="nav-link" href="{{ url_for('nueva_venta') }}">Ventas Externas</a></li>
+  <li><a class="nav-link active" href="{{ url_for('ventas_interna') }}">Ventas Internas</a></li>
+</ul>
+
+<!-- Select empleados -->
+<select name="internal_user">
+{% for u in staff_users %}
+  <option value="{{ u.id }}">{{ u.email }}</option>
+{% endfor %}
+</select>
+
+<select name="user_internal" required>
+  <option>Seleccionar empleado interno</option>
+</select>
+
+<h2>Venta</h2>
+
+<!-- Form agregar producto -->
+<form method="post" class="form-inline">
+  <input name="code" placeholder="Código (puedes escanear)" autofocus>
+  <input name="qty" type="number" step="1" value="1">
+  <button>Agregar</button>
+</form>
+
+<!-- Tabla -->
+<table class="table" style="text-align: right;">
+  <thead>
+    <tr>
+      <th>Producto</th>
+      <th>Cantidad</th>
+      <th>Precio</th>
+      <th>Subtotal</th>
+      <th></th>
+    </tr>
+  </thead>
+
+  <tbody>
+  {% for it in items %}
+    <tr>
+      <td>{{ it.product.name if it.product else it.code or 'N/A' }}</td>
+      <td>{{ it.qty }}</td>
+      <td>{{ '%.2f'|format(it.price) }}</td>
+      <td>{{ '%.2f'|format(it.qty * it.price) }}</td>
+      <td>
+        <form method="post" action="{{ safe_url('venta_item_delete', sale_id=sale.id, item_id=it.id) }}">
+          <button class="link danger">Quitar</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5">Sin ítems</td></tr>
+  {% endfor %}
+  </tbody>
+
+  <tfoot>
+    <tr>
+      <th colspan="3" class="text-end">TOTAL</th>
+      <th id="total">{{ '%.2f'|format(total) }}</th>
+      <th></th>
+    </tr>
+  </tfoot>
+</table>
+
+<!--  BLOQUE CORRECTO (FUERA DE LA TABLA) -->
+<hr>
+
+<div style="max-width:300px;">
+
+  <label>Descuento ($):</label>
+  <input type="number" id="descuento" class="form-control" value="0" oninput="calcularTotal()">
+
+  <label>Total final:</label>
+  <input type="text" id="total-final" class="form-control" readonly>
+
+  <label>Recibido:</label>
+  <input type="number" id="recibido" class="form-control" oninput="calcularTotal()">
+
+  <label>Cambio:</label>
+  <input type="text" id="cambio" class="form-control" readonly>
+
+</div>
+
+<!-- Botones -->
+<div class="form-inline">
+  <form method="post" action="{{ safe_url('venta_finalizar', sale_id=sale.id) }}">
+    <button class="success">Finalizar</button>
+  </form>
+
+  <form method="post" action="{{ safe_url('venta_cancelar', sale_id=sale.id) }}">
+    <button class="danger">Cancelar</button>
+  </form>
+</div>
+
+<!-- Script -->
+<script>
+function calcularTotal() {
+    let total = parseFloat(document.getElementById("total").innerText) || 0;
+    let descuento = parseFloat(document.getElementById("descuento").value) || 0;
+    let recibido = parseFloat(document.getElementById("recibido").value) || 0;
+
+    let totalFinal = total - descuento;
+    if (totalFinal < 0) totalFinal = 0;
+
+    let cambio = recibido - totalFinal;
+
+    document.getElementById("total-final").value = totalFinal.toFixed(2);
+    document.getElementById("cambio").value = cambio.toFixed(2);
+}
+
+document.addEventListener("DOMContentLoaded", calcularTotal);
+</script>
+
+{% endblock %}

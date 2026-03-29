@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <link rel="icon" type="image/x-icon" href="/static/img/arca_logo.png" sizes="32x32">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- TEMA DINÁMICO -->
+  <link id="theme-style" rel="stylesheet" href="{{ url_for('static', filename='css/theme-arca.css') }}">
+  <title>{{ brand_name or 'El Arca De Charly' }}</title>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="{{ url_for('static', filename=brand_logo or 'img/arca_logo.png') }}" alt="Logo">
+      <div>
+        <div class="name">{{ brand_name or 'El Arca De Charly' }}</div>
+        <div class="sub">Sistema Veterinario</div>
+      </div>
+    </div>
+    <nav class="menu">
+      <a href="{{ safe_url('index') }}">🏠 Inicio</a>
+      
+      <li class="menu-item">
+        <a href="{{ url_for('inventory_list') }}"
+          class="menu-toggle"
+          onclick="toggleMenu('inv-menu', event)">
+          ▼ Inventario 
+        </a>
+        
+        <ul id="inv-menu" class="submenu">
+          <li><a href="{{ safe_url('inventory_list') }}" style="padding: 0px 7px;">Inventario General</a></li>
+          <li><a href="{{ safe_url('suppliers_list') }}" style="padding: 0px 7px;">Proveedores</a></li>
+          <li><a href="{{ safe_url('contacts_list') }}" style="padding: 0px 7px">Contactos</a></li>
+        </ul>
+      </li>
+
+      <a href="{{ safe_url('nueva_venta') }}">🧾 Ventas</a>
+      <a href="{{ safe_url('audit_list') }}">🧮 Auditoría</a>
+      <a href="{{ safe_url('admin_datos') }}">⚙️ Administrativo</a>
+      <a href="{{ safe_url('users_list') }}">👤 Usuarios</a>
+      <a href="{{ safe_url('documentos') }}">📄 Documentos</a>
+      <a href="{{ safe_url('autho') }}">🛂 Autorizaciones</a>
+      <a href="{{ safe_url('citas') }}">📅 Citas</a>
+      <a class="nav-link" href="{{ url_for('historial_clinico') }}">🩺 Historial Clínico</a>
+
+      <li class="menu-item">
+        <a href="{{ url_for('estetica') }}" class="menu-toggle" onclick="toggleMenu('serv-menu', event)">
+          ✂️ Estética
+        </a>
+        <ul id="serv-menu" class="submenu">
+          <li><a style="padding: 1% 2%;" href="{{ url_for('estetica_servicios') }}">Servicios Registrados</a></li>
+        </ul>
+      </li>
+
+      <a href="{{ safe_url('logout') }}">🔓 Salir</a>
+    </nav>
+  </aside>
+  
+  <main class="main">
+    <!-- TOPBAR -->
+    <header class="topbar" style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;">
+      <div>
+        Panel Administrativo
+      </div>
+      <!-- SELECTOR DE TEMA -->
+      <div>
+        <select id="themeSelector" style="padding:5px 10px; border-radius:6px;">
+          <option value="theme-arca.css">Clásico</option>
+          <option value="theme-premium.css">Premium Verde</option>
+        </select>
+      </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat,msg in messages %}
+        <div class="flash">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+    
+    <section class="content">
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+
+  <style>
+    .menu-toggle {
+      padding: 10px;
+      display: block;
+      text-decoration: none;
+      color: #333;
+      cursor: pointer;
+    }
+
+    .menu-toggle.active {
+      background: #0f1a31;
+      font-weight: bold;
+      border-radius: 5px;
+    }
+
+    .submenu {
+      list-style: none;
+      margin: 0;
+      padding-left: 20px;
+      display: none;
+    }
+  </style>
+
+  <script>
+    function toggleMenu(id, event) {
+      if (event) {
+        event.preventDefault();
+      }
+      const submenu = document.getElementById(id);
+      if (!submenu) return;
+
+      const isOpen = submenu.style.display === "block";
+
+      if (!isOpen) {
+        submenu.style.display = "block";
+        // marcar activo
+        if (event && event.currentTarget) {
+          event.currentTarget.classList.add("active");
+        }
+      } else {
+        // navegar al href del enlace
+        const link = event && event.currentTarget
+          ? event.currentTarget
+          : document.querySelector('.menu-toggle[onclick*="' + id + '"]');
+        if (link && link.getAttribute("href")) {
+          window.location.href = link.getAttribute("href");
+        }
+      }
+    }
+
+    // SCRIPT CAMBIO DE TEMA
+    const selector = document.getElementById("themeSelector");
+    const themeLink = document.getElementById("theme-style");
+
+    selector.addEventListener("change", function() {
+      themeLink.href = "/static/css/" + this.value;
+      localStorage.setItem("selectedTheme", this.value);
+    });
+
+    window.onload = function() {
+      const savedTheme = localStorage.getItem("selectedTheme");
+      if (savedTheme) {
+        themeLink.href = "/static/css/" + savedTheme;
+        selector.value = savedTheme;
+      }
+    }
+  </script>
+
+</body>
+</html>

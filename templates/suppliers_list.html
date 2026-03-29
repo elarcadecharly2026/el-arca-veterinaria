@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: flex; gap: 20px; height: calc(100vh - 120px);">
+    <!-- LISTA IZQUIERDA -->
+    <div style="flex: 1; padding: 20px; overflow-y: auto; border-right: 1px solid #ddd; background: var(--bg);">
+        <h2 style="margin-top: 0; color: var(--text);">Proveedores</h2>
+        
+        <form method="get" style="margin-bottom: 20px; display: flex; gap: 10px;">
+            <input type="text" name="q" placeholder="Buscar por nombre, RFC, email o teléfono..." 
+                   value="{{ q }}" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+            <button type="submit" style="background: rgb(59 130 246 / 47%);
+                border: 1px solid #1f2937;
+                color: var(--text);
+                padding: 8px 14px;
+                border-radius: 8px;
+                cursor: pointer;
+                margin: 4px 6px;">🔍 Buscar</button>
+        </form>
+        
+        <!-- CONTENEDOR SEPARADO PARA EL BOTÓN NUEVO PROVEEDOR -->
+        <div style="margin-bottom: 25px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 2px dashed #e5e7eb;">
+            <a href="{{ url_for('suppliers_new') }}" style="display: block; 
+                text-align: center;
+                background: rgb(59 130 246 / 47%);
+                border: 1px solid #1f2937;
+                color: var(--text);
+                padding: 12px 20px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 15px;
+                text-decoration: none;
+                transition: all 0.2s;">
+                ➕ Nuevo Proveedor
+            </a>
+        </div>
+        
+        <!-- LISTA DE PROVEEDORES -->
+        <div id="suppliers-list" style="margin-top: 20px;">
+            {% if suppliers %}
+                {% for supplier in suppliers %}
+                   <div class="supplier-item" onclick="loadSupplierDetail({{ supplier.id }})"
+                         style="padding: 15px; border: 1px solid #ddd; margin-bottom: 12px; 
+                                 cursor: pointer; border-radius: 6px; background: #f9f9f9; 
+                                 transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <div style="font-weight: bold; color: var(--text); margin-bottom: 6px; font-size: 15px;">
+                            {{ supplier.name }}
+                        </div>
+                        
+                        <!-- Teléfono destacado -->
+                        <div style="font-size: 13.5px; color: #1d4ed8; margin-bottom: 4px; font-weight: 500;">
+                            📱 <strong>{{ supplier.phone or 'Sin teléfono' }}</strong>
+                        </div>
+                        
+                        <!-- Email -->
+                        <div style="font-size: 13px; color: #4b5563; margin-bottom: 2px;">
+                            {{ supplier.email or 'Sin email' }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: #999; text-align: center; margin-top: 40px; font-size: 14px;">📭 No hay proveedores registrados</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- PANEL LATERAL DERECHO -->
+    <div id="details-panel" style="width: 380px; padding: 20px; overflow-y: auto; 
+                                    background: #f8f9fa; border-left: 3px solid var(--text);
+                                    display: none; box-shadow: -2px 0 8px rgba(0,0,0,0.08);">
+        <button onclick="closeDetailPanel()" style="float: right; background: none; border: none; 
+                                                     font-size: 24px; cursor: pointer; color: #666; padding: 0;">✕</button>
+        <div id="details-content" style="clear: both;"></div>
+    </div>
+</div>
+
+<script>
+    // ... resto del JavaScript sin cambios ...
+</script>
+{% endblock %}
+
