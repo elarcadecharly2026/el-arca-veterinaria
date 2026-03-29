@@ -1367,20 +1367,20 @@ def reportes():
         hoy = datetime.now().date()
 
         # Ventas del día
-        ventas_dia = db.query(func.sum(Sale.total)).filter(
+        ventas_dia = db.query(func.sum(SaleItem.qty * SaleItem.price)).filter(
             func.date(Sale.created_at) == hoy
         ).scalar() or 0
 
         # Ventas del mes
         mes = datetime.now().month
-        ventas_mes = db.query(func.sum(Sale.total)).filter(
+        ventas_mes = db.query(func.sum(SaleItem.qty * SaleItem.price)).filter(
             func.extract('month', Sale.created_at) == mes
         ).scalar() or 0
 
         # Ventas por empleado
         ventas_empleados = db.query(
             User.email,
-            func.sum(Sale.total)
+            func.sum(SaleItem.qty * SaleItem.price)
         ).join(Sale, Sale.user_id == User.id)\
          .group_by(User.email).all()
 
@@ -2150,3 +2150,36 @@ def authorize_google():
         db.close()
 
     return redirect(url_for("dashboard"))
+
+
+# ===============================
+# POS PRO EXTENSIONS
+# ===============================
+
+def calcular_total(sale):
+    return sum((i.qty or 0) * (i.price or 0) for i in getattr(sale, 'items', []))
+
+@app.route("/ventas/<int:sale_id>/ticket")
+def ticket(sale_id):
+    db = SessionLocal()
+    try:
+        sale = db.get(Sale, sale_id) or abort(404)
+        total = calcular_total(sale)
+        return render_template("ticket.html", sale=sale, total=total)
+    finally:
+        db.close()
+
+@app.route("/corte-caja")
+def corte_caja():
+    db = SessionLocal()
+    try:
+        from sqlalchemy import func
+        from datetime import datetime
+        hoy = datetime.utcnow().date()
+        total = db.query(func.sum(SaleItem.qty * SaleItem.price))\
+            .join(Sale)\
+            .filter(func.date(Sale.created_at) == hoy)\
+            .scalar() or 0
+        return render_template("corte.html", total=total)
+    finally:
+        db.close()

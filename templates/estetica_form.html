@@ -36,150 +36,119 @@
             <option value="femenino">Macho</option>
           </select>
           <label>Edad:</label>
-    <input type="text" name="mascotaedad" id="edad" maxlength="2" pattern="^(0[1-9]|[1-8][0-9]|9[0-9])$" 
+          <input type="text" name="mascotaedad" id="edad" maxlength="2" pattern="^(0[1-9]|[1-8][0-9]|9[0-9])$" 
            title="Edad de 01 a 99" required placeholder="05">
         </div>
         <div>
           <label>Raza:</label><input type="text" name="mascotaraza">
           <label>Color:</label><input type="text" name="mascotacolor">
           <label>Tamaño (cm):</label>
-    <input type="number" name="mascotatamano" id="tamano" min="1" max="300" step="0.1" 
+          <input type="number" name="mascotatamano" id="tamano" min="1" max="300" step="0.1" 
            title="Tamaño en centímetros" required placeholder="25.5">
         </div>
       </div>
 
-      <!-- SERVICIO CORTE DE PELO-->
-{% if servicio == 'cortepelo' %}
-<div>
-  <label>Tipo de corte:</label>
-  <select name="tipocorte" required>
-    <option value="">Seleccionar tipo</option>
-    <option value="estandar">Estándar</option>
-    <option value="artistica">Artística</option>
-    <option value="deportiva">Deportiva</option>
-    <option value="navidad">Navidad</option>
-    <option value="halloween">Halloween</option>
-    <option value="personalizado">Personalizado</option>
-  </select>
-</div>
-{% endif %}
-
+      {% if servicio == 'cortepelo' %}
+      <div>
+        <label>Tipo de corte:</label>
+        <select name="tipocorte" required>
+          <option value="">Seleccionar tipo</option>
+          <option value="estandar">Estándar</option>
+          <option value="artistica">Artística</option>
+          <option value="deportiva">Deportiva</option>
+          <option value="navidad">Navidad</option>
+          <option value="halloween">Halloween</option>
+          <option value="personalizado">Personalizado</option>
+        </select>
+      </div>
+      {% endif %}
 
       <h3>Observaciones</h3>
       <textarea name="observaciones" rows="4"></textarea>
 
       <h3>Precio</h3>
-<div class="precios" style="display: flex; gap: 10px; flex-wrap: wrap;">
-  {% if servicio == 'cortepelo' %}
-    <button type="button" class="btn-servicio" name="precio" value="350">$350</button>
-    <button type="button" class="btn-servicio" name="precio" value="400">$400</button>
-    <button type="button" class="btn-servicio" name="precio" value="450">$450</button>
-    <button type="button" class="btn-servicio" name="precio" value="500">$500</button>
-    <button type="button" class="btn-servicio" name="precio" value="550">$550</button>
-    <button type="button" class="btn-servicio" name="precio" value="600">$600</button>
-  {% else %}
-    <!-- Precios originales para otros servicios -->
-    <button type="button" class="btn-servicio" name="precio" value="300">$300</button>
-    <button type="button" class="btn-servicio" name="precio" value="350">$350</button>
-    <button type="button" class="btn-servicio" name="precio" value="400">$400</button>
-    <button type="button" class="btn-servicio" name="precio" value="500">$500</button>
-    <button type="button" class="btn-servicio" name="precio" value="550">$550</button>
-  {% endif %}
-</div>
-<input type="hidden" name="precio" id="precio-input">
-<input type="hidden" name="servicio" id="servicio-input">
 
+      <div class="precios" style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button type="button" class="btn-servicio" onclick="agregarServicio('{{ titulo }}', 300)">$300</button>
+        <button type="button" class="btn-servicio" onclick="agregarServicio('{{ titulo }}', 350)">$350</button>
+        <button type="button" class="btn-servicio" onclick="agregarServicio('{{ titulo }}', 400)">$400</button>
+        <button type="button" class="btn-servicio" onclick="agregarServicio('{{ titulo }}', 500)">$500</button>
+        <button type="button" class="btn-servicio" onclick="agregarServicio('{{ titulo }}', 550)">$550</button>
+      </div>
 
+      <h3>Servicios seleccionados</h3>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Servicio</th>
+            <th>Precio</th>
+            <th>Eliminar</th>
+          </tr>
+        </thead>
+        <tbody id="tablaServicios"></tbody>
+      </table>
+
+      <!-- 🔥 TOTAL VISIBLE -->
+      <h3>Total: $<span id="total-texto">0</span></h3>
+
+      <input type="hidden" name="precio" id="precio-total">
+      <input type="hidden" name="servicio" id="servicio-input">
 
       <div style="margin-top:20px;">
         <button type="submit" class="btn btn-primary">Guardar servicio</button>
       </div>
 
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const buttons = document.querySelectorAll('.btn-servicio');
-    const form = document.querySelector('form');
-    
-    // Crear campo oculto para el nombre del servicio si no existe
-    let servicioInput = document.querySelector('input[name="servicio"]');
-    if (!servicioInput) {
-        servicioInput = document.createElement('input');
-        servicioInput.type = 'hidden';
-        servicioInput.name = 'servicio';
-        form.appendChild(servicioInput);
-    }
-    
-    buttons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Estilo visual actual
-            buttons.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Establecer precio
-            const precioInput = document.querySelector('input[name="precio"]');
-            if (precioInput) {
-                precioInput.value = this.value;
-            }
-            
-            // NUEVO: Establecer nombre del servicio automáticamente
-            const servicioNombre = obtenerNombreServicio();
-            servicioInput.value = servicioNombre;
-            console.log('Servicio seleccionado:', servicioNombre); // Para debug
-        });
+let total = 0;
+
+function agregarServicio(nombre, precio) {
+    const tabla = document.getElementById("tablaServicios");
+
+    let fila = document.createElement("tr");
+
+    fila.innerHTML = `
+        <td>${nombre}</td>
+        <td><input type="number" value="${precio}" onchange="actualizarTotal()"></td>
+        <td><button type="button" onclick="eliminarFila(this)">X</button></td>
+    `;
+
+    tabla.appendChild(fila);
+
+    actualizarTotal();
+}
+
+function eliminarFila(btn) {
+    btn.parentElement.parentElement.remove();
+    actualizarTotal();
+}
+
+function actualizarTotal() {
+    total = 0;
+    const filas = document.querySelectorAll("#tablaServicios tr");
+
+    filas.forEach(fila => {
+        const precio = fila.querySelector("input").value;
+        total += parseFloat(precio) || 0;
     });
-    
-    // Función que determina el nombre basado en la URL o contexto
-    function obtenerNombreServicio() {
-        // Extraer servicio de la URL (ej: /esteticaform?servicio=banos)
-        const urlParams = new URLSearchParams(window.location.search);
-        const servicioUrl = urlParams.get('servicio');
-        
-        if (servicioUrl) {
-            const nombres = {
-                'banos': 'BAÑOS',
-                'banosgarrapaticidas': 'BAÑOS GARRAPATICIDAS',
-                'cortepelo': 'CORTE DE PELO'
-            };
-            return nombres[servicioUrl] || servicioUrl.toUpperCase();
-        }
-        
-        // Fallback: usar el título de la página
-        const titulo = document.querySelector('h2').textContent.trim();
-        return titulo || 'SERVICIO';
+
+    document.getElementById("precio-total").value = total;
+    document.getElementById("servicio-input").value = "SERVICIO ESTÉTICA";
+    document.getElementById("total-texto").innerText = total.toFixed(2);
+}
+
+// 🔥 VALIDACIÓN
+document.querySelector("form").addEventListener("submit", function(e) {
+    if (total <= 0) {
+        alert("Debes agregar al menos un servicio");
+        e.preventDefault();
     }
-    
-    // Validaciones existentes...
-    form.addEventListener('submit', function(e) {
-        const tel = document.getElementById('telefono');
-        if (tel.value && !/^\d{10}$/.test(tel.value)) {
-            alert('El teléfono debe tener exactamente 10 dígitos');
-            tel.focus();
-            e.preventDefault();
-            return false;
-        }
-        
-        const edad = document.getElementById('edad');
-        if (edad.value && !/^([0-9]{1,2}|01|99)$/.test(edad.value)) {
-            alert('La edad debe ser de 01 a 99');
-            edad.focus();
-            e.preventDefault();
-            return false;
-        }
-        
-        // Verificar que se seleccionó un servicio
-        if (!servicioInput.value) {
-            alert('Debes seleccionar un precio/servicio');
-            e.preventDefault();
-            return false;
-        }
-    });
 });
 </script>
-
+          
 <style>
 .content{background-image: linear-gradient(to top, #a8edea 0%, #fed6e3 100%);}
-  
+
 .btn-servicio {
   background-image: linear-gradient(to right, #77A1D3 0%, #79CBCA 51%, #77A1D3 100%);
   margin: 10px;
@@ -194,10 +163,8 @@ document.addEventListener('DOMContentLoaded', function() {
   display: inline-block;
   outline: none;
   border: none;
-
 }
 
-/* lo que antes ponías en :hover, ponlo también aquí */
 .btn-servicio:hover,
 .btn-servicio.active {
   background-position: right center !important;
@@ -205,8 +172,18 @@ document.addEventListener('DOMContentLoaded', function() {
   text-decoration: none !important;
 }
 
+/* 🔥 tabla más bonita */
+table {
+  width: 100%;
+  margin-top: 10px;
+}
 
+table input {
+  width: 80px;
+  text-align: center;
+}
 </style>
+
     </form>
   </div>
 </div>

@@ -4,40 +4,29 @@
 <div style="display: flex; gap: 20px; height: calc(100vh - 120px);">
     <!-- LISTA IZQUIERDA -->
     <div style="flex: 1; padding: 20px; overflow-y: auto; border-right: 1px solid #ddd; background: var(--bg);">
-        <h2 style="margin-top: 0; color: var(--text);">Proveedores</h2>
+        <h2 style="margin-top: 0; color: var(--text)">Proveedores</h2>
         
         <form method="get" style="margin-bottom: 20px; display: flex; gap: 10px;">
             <input type="text" name="q" placeholder="Buscar por nombre, RFC, email o teléfono..." 
                    value="{{ q }}" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
             <button type="submit" style="background: rgb(59 130 246 / 47%);
-                border: 1px solid #1f2937;
-                color: var(--text);
-                padding: 8px 14px;
-                border-radius: 8px;
-                cursor: pointer;
-                margin: 4px 6px;">🔍 Buscar</button>
+    border: 1px solid #1f2937;
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 4px 6px;">🔍 Buscar</button>
         </form>
         
-        <!-- CONTENEDOR SEPARADO PARA EL BOTÓN NUEVO PROVEEDOR -->
-        <div style="margin-bottom: 25px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 2px dashed #e5e7eb;">
-            <a href="{{ url_for('suppliers_new') }}" style="display: block; 
-                text-align: center;
-                background: rgb(59 130 246 / 47%);
-                border: 1px solid #1f2937;
-                color: var(--text);
-                padding: 12px 20px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-weight: bold;
-                font-size: 15px;
-                text-decoration: none;
-                transition: all 0.2s;">
-                ➕ Nuevo Proveedor
-            </a>
-        </div>
+        <a href="{{ url_for('suppliers_new') }}" style="background: rgb(59 130 246 / 47%);
+    border: 1px solid #1f2937;
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 4px 6px;">+  Nuevo Proveedor</a>
         
-        <!-- LISTA DE PROVEEDORES -->
-        <div id="suppliers-list" style="margin-top: 20px;">
+        <div id="suppliers-list">
             {% if suppliers %}
                 {% for supplier in suppliers %}
                    <div class="supplier-item" onclick="loadSupplierDetail({{ supplier.id }})"
@@ -76,7 +65,103 @@
 </div>
 
 <script>
-    // ... resto del JavaScript sin cambios ...
+    function loadSupplierDetail(supplierId) {
+        fetch(`/api/supplier/${supplierId}`)
+            .then(r => r.json())
+            .then(data => {
+                const panel = document.getElementById('details-panel');
+                const content = document.getElementById('details-content');
+                
+                let html = `
+                    <h3 style="margin-top: 0; margin-bottom: 10px; color: #0f1425; font-size: 22px;">${escapeHtml(data.name)}</h3>
+                    <hr style="margin: 15px 0; border: none; border-top: 1px solid #ddd;">
+                    
+                        <div style="margin-bottom: 10px; font-size: 13px;">
+                            <div style="color: var(--bg); margin-bottom: 2px;"><strong>📧 Email:</strong></div>
+                            <div style="color: #333;">${escapeHtml(data.email || 'N/A')}</div>
+                        </div>
+                        
+                        <div style="margin-bottom: 10px; font-size: 13px;">
+                            <div style="color: var(--bg); margin-bottom: 2px;"><strong>📱 Teléfono:</strong></div>
+                            <div style="color: #333;">${escapeHtml(data.phone || 'N/A')}</div>
+                        </div>
+
+                        <div style="background: white; padding: 14px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #ddd;">
+                        <div style="margin-bottom: 10px; font-size: 13px;">
+                            <div style="color: var(--bg); margin-bottom: 2px;"><strong>🏢 RFC:</strong></div>
+                            <div style="color: #333;">${escapeHtml(data.rfc || 'N/A')}</div>
+                        </div>
+                        
+                        <div style="margin-bottom: 10px; font-size: 13px;">
+                            <div style="color: var(--bg); margin-bottom: 2px;"><strong>🏙️ Ciudad:</strong></div>
+                            <div style="color: #333;">${escapeHtml(data.city || 'N/A')}</div>
+                        </div>
+                        
+                        <div style="margin-bottom: 10px; font-size: 13px;">
+                            <div style="color: var(--bg); margin-bottom: 2px;"><strong>📍 Dirección:</strong></div>
+                            <div style="color: #333; word-break: break-word;">${escapeHtml(data.address || 'N/A')}</div>
+                        </div>
+                        
+                        <div style="font-size: 13px;">
+                            <div style="color: var(--bg); margin-bottom: 2px;"><strong>📝 Notas:</strong></div>
+                            <div style="color: #333; word-break: break-word;">${escapeHtml(data.notes || 'Sin notas')}</div>
+                        </div>
+                    </div>
+                    
+                    <hr style="margin: 15px 0; border: none; border-top: 1px solid #ddd;">
+                    <h4 style="margin: 15px 0 10px 0; color: #0f1425; font-size: 16px;">📞 Contactos (${data.contacts_count})</h4>
+                `;
+                
+                if (data.contacts && data.contacts.length > 0) {
+                    html += '<div style="margin-bottom: 15px;">';
+                    data.contacts.forEach(c => {
+                        html += `
+                            <div style="padding: 12px; border: 1px solid #ddd; margin-bottom: 10px; border-radius: 6px; background: white; font-size: 13px;">
+                                <div style="font-weight: bold; color: #333; margin-bottom: 4px;">${escapeHtml(c.name)}</div>
+                                <div style="color: var(--bg); margin-bottom: 6px;">${escapeHtml(c.position || 'Sin cargo')}</div>
+                                <div style="color: #007bff; margin-bottom: 3px;">📧 ${escapeHtml(c.email || 'N/A')}</div>
+                                <div style="color: var(--bg);">📱 ${escapeHtml(c.phone || 'N/A')}</div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                } else {
+                    html += '<p style="color: #999; background: white; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; border: 1px solid #ddd;">Sin contactos registrados</p>';
+                }
+                
+                html += `
+                    <hr style="margin: 15px 0; border: none; border-top: 1px solid #ddd;">
+                    <a href="/suppliers/${data.id}/edit" style="display: block; text-align: center; padding: 11px; background: #0f1a31; color: var(--text); text-decoration: none; border-radius: 4px; margin-bottom: 10px; font-weight: bold; font-size: 14px; cursor: pointer;">✏️ Editar Proveedor</a>
+                    <a href="/suppliers/${data.id}/contacts/new" style="display: block; text-align: center; padding: 11px; background: #0f1a31; color: var(--text); text-decoration: none; border-radius: 4px; margin-bottom: 10px; font-weight: bold; font-size: 14px; cursor: pointer;">➕ Agregar Contacto</a>
+                    <form method="post" action="/suppliers/${data.id}/delete" style="margin: 0;">
+                        <button type="submit" style="width: 100%; padding: 11px; background: #0f1a31; color: var(--text); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; margin: 0px 0px;" onclick="return confirm('¿Estás seguro de que quieres eliminar este proveedor?');">🗑️ Eliminar</button>
+                    </form>
+                `;
+                
+                content.innerHTML = html;
+                panel.style.display = 'block';
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Error al cargar detalles del proveedor');
+            });
+    }
+    
+    function closeDetailPanel() {
+        document.getElementById('details-panel').style.display = 'none';
+    }
+    
+    // Función auxiliar para escapar HTML
+    function escapeHtml(text) {
+        if (!text) return '';
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
 </script>
 {% endblock %}
-

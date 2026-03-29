@@ -13,12 +13,10 @@
 
 
 <style>
-/* Layout general: sidebar + panel derecho */
 .estetica-layout {
   display: flex;
 }
 
-/* Ajusta según el ancho de tu sidebar */
 .estetica-layout .panel-estetica {
   flex: 1;
   padding: 2rem 1rem;
@@ -28,19 +26,19 @@
   justify-items: center;
 }
 
-/* Botones */
 .btn-estetica {
   background-image: linear-gradient(to right, #504b8a 0%, #3b82f633 51%, #3b82f678 100%);
   font-weight: bold;
+  font-size: 18px; /* 🔥 letra más grande */
   margin: 10px;
-  padding: 25px 25px;
+  padding: 18px 20px;
   text-align: center;
   text-transform: uppercase;
   transition: 0.5s;
   background-size: 200% auto;
   color: white;
-  box-shadow: 0 0 25px #eee;
-  border-radius: 15px;
+  box-shadow: 0 0 20px #eee;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,50 +52,37 @@
   text-decoration: none !important;
 }
 
-/* Botón "EXTRAS" ocupando toda la fila */
 .btn-estetica--full {
-  grid-column: 1 / 0;
+  grid-column: 1 / -1;
   max-width: 340px;
 }
 
-/* Responsivo tablet */
+.servicios-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  justify-items: center;
+}
+
+/* 🔥 corrección importante */
+.servicios-grid a:nth-child(6) {
+  grid-column: 2 / 3;
+}
+
+/* Responsive */
 @media (max-width: 900px) {
-  .estetica-layout .panel-estetica {
-    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  .servicios-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* Responsivo móvil */
 @media (max-width: 600px) {
-  .estetica-layout {
-    flex-direction: column;     /* sidebar arriba o colapsado según tu base */
-  }
-
-  .estetica-layout .panel-estetica {
+  .servicios-grid {
     grid-template-columns: 1fr;
-    padding: 1.5rem 1rem;
   }
 
   .btn-estetica {
-    max-width: 100%;
-  }
-
-  .btn-estetica--full {
-    grid-column: auto;
+    width: 100%;
   }
 }
-
-.servicios-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 columnas */
-    gap: 20px; /* separación entre botones */
-    justify-items: center; /* centrar cada botón */
-}
-
-/* el 7º botón (EXTRAS) ocupa las 3 columnas centrado abajo */
-.servicios-grid button:nth-child(6) {
-    grid-column: 2 / 3; /* se coloca en la columna central */
-}
-
 </style>
-{% endblock %}

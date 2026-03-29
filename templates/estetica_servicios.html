@@ -7,7 +7,7 @@
     <a href="{{ url_for('estetica') }}" class="btn btn-primary">Volver a Estética</a>
   </div>
   <h2>Servicios registrados</h2>
-  <table class=" table table-services">
+  <table class="table-services">
     <thead>
       <tr>
         <th>Fecha</th>
@@ -36,30 +36,11 @@
   </table>
 </div>
 <style>
-  .table table-services {
-  display: table !important;
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-}
-
-.table table-services thead {
-  display: table-header-group !important;
-}
-
-.table table-services tbody {
-  display: table-row-group !important;
-}
-
-.table table-services tr {
-  display: table-row !important;
-}
-
-.table table-services th,
-.table table-services td {
-  display: table-cell !important;
-  padding: 12px;
-  border-bottom: 1px solid #ddd;
-}
+  .table-services {     background-image: radial-gradient(circle farthest-corner at 10% 20%, rgb(59 130 246 / 47%) 0%, rgb(0 141 130); width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+  .table-services th, .table-services td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+  .table-services th { background: #0f1a31; color: white; }
+  .table-services tr:nth-child(even) { background: #0f1a31; }
+  .btn { padding: 10px 20px; margin: 5px; text-decoration: none; border-radius: 5px; }
+  .btn-primary { background: #007bff; color: white; }
 </style>
 {% endblock %}

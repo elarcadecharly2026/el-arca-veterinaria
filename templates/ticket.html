@@ -1,0 +1,10 @@
+
+<!doctype html>
+<h2>Ticket Venta #{{ sale.id }}</h2>
+<ul>
+{% for i in sale.items %}
+<li>{{ i.product.name }} x{{ i.qty }} - ${{ i.price }}</li>
+{% endfor %}
+</ul>
+<h3>Total: ${{ total }}</h3>
+<script>window.print()</script>
