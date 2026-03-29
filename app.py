@@ -1986,12 +1986,16 @@ def dashboard():
         mes = datetime.utcnow().month
 
         # 💰 ventas hoy
-        ventas_hoy = db.query(func.sum(Sale.total)).filter(
+        ventas_hoy = db.query(
+            func.sum(SaleItem.qty * SaleItem.price)
+        ).join(Sale).filter(
             func.date(Sale.created_at) == hoy
         ).scalar() or 0
 
         # 💰 ventas ayer
-        ventas_ayer = db.query(func.sum(Sale.total)).filter(
+        ventas_ayer = db.query(
+            func.sum(SaleItem.qty * SaleItem.price)
+        ).join(Sale).filter(
             func.date(Sale.created_at) == ayer
         ).scalar() or 0
 
@@ -2001,11 +2005,13 @@ def dashboard():
             crecimiento = ((ventas_hoy - ventas_ayer) / ventas_ayer) * 100
 
         # 📅 ventas mes
-        ventas_mes = db.query(func.sum(Sale.total)).filter(
+        ventas_mes = db.query(
+            func.sum(SaleItem.qty * SaleItem.price)
+        ).join(Sale).filter(
             func.extract('month', Sale.created_at) == mes
         ).scalar() or 0
 
-        # 🧾 número de ventas hoy ✅ (FALTABA)
+        # 🧾 número de ventas hoy
         ventas_count = db.query(func.count(Sale.id)).filter(
             func.date(Sale.created_at) == hoy
         ).scalar() or 0
@@ -2030,7 +2036,9 @@ def dashboard():
         for i in range(6, -1, -1):
             dia = hoy - timedelta(days=i)
 
-            total = db.query(func.sum(Sale.total)).filter(
+            total = db.query(
+                func.sum(SaleItem.qty * SaleItem.price)
+            ).join(Sale).filter(
                 func.date(Sale.created_at) == dia
             ).scalar() or 0
 
@@ -2046,12 +2054,15 @@ def dashboard():
          .order_by(func.sum(SaleItem.qty).desc())\
          .limit(5).all()
 
-        # 🕒 últimas ventas
-        ventas_recientes = db.query(Sale)\
-            .order_by(Sale.id.desc())\
-            .limit(5).all()
+        # 🕒 últimas ventas (con total real)
+        ventas_recientes = db.query(
+            Sale.id,
+            func.sum(SaleItem.qty * SaleItem.price).label('total')
+        ).join(SaleItem)\
+         .group_by(Sale.id)\
+         .order_by(Sale.id.desc())\
+         .limit(5).all()
 
-        # ✅ TODO DENTRO DEL TRY
         return render_template(
             'dashboard.html',
             ventas_hoy=ventas_hoy,
