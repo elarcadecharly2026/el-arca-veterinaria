@@ -1,137 +1,221 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2 style="margin-bottom:20px;">📊 Dashboard</h2>
+<h2 style="margin-bottom:20px;">🛒 Caja Registradora</h2>
 
 <style>
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
-    gap: 15px;
-    margin-bottom: 20px;
+body {
+    background: #f5f6fa !important;
 }
-.card {
+
+/* Layout */
+.pos {
+    display: flex;
+    gap: 20px;
+}
+
+/* Panel izquierdo */
+.left {
+    flex: 2;
+}
+
+/* Panel derecho */
+.right {
+    flex: 1;
     background: #fff;
-    padding: 20px;
+    padding: 15px;
     border-radius: 15px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
-.card h4 {
-    margin: 0;
-    font-size: 14px;
-    color: #666;
+
+/* Buscador */
+#buscador {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
 }
-.card h2 {
-    margin: 5px 0 0;
+
+#resultados div {
+    padding: 8px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
 }
-.green { color: green; }
-.red { color: red; }
-.warning { background: #fff3cd; }
-.danger { background: #f8d7da; }
+
+#resultados div:hover {
+    background: #f0f0f0;
+}
+
+/* Tabla */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th, .table td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Botones */
+button {
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-cobrar {
+    background: #28a745;
+    color: white;
+    width: 100%;
+}
+
+.btn-cancelar {
+    background: red;
+    color: white;
+    width: 100%;
+}
+
+/* Stock bajo */
+.low-stock {
+    background: #fff3cd;
+}
+
+.out-stock {
+    background: #f8d7da;
+}
 </style>
 
-<div class="grid">
+<div class="pos">
 
-<div class="card">
-<h4>💰 Ventas Hoy</h4>
-<h2>${{ ventas_hoy or 0 }}</h2>
-<p class="{{ 'green' if (crecimiento or 0) >= 0 else 'red' }}">
-{{ crecimiento or 0 }}%
-</p>
-</div>
+<!-- 🔎 IZQUIERDA -->
+<div class="left">
 
-<div class="card">
-<h4>📅 Ventas Mes</h4>
-<h2>${{ ventas_mes or 0 }}</h2>
-</div>
+<h3>🔎 Buscar producto</h3>
 
-<div class="card">
-<h4>💳 Ticket Promedio</h4>
-<h2>${{ ticket_promedio or 0 }}</h2>
-</div>
+<input type="text" id="buscador" placeholder="Escanea o escribe...">
+<div id="resultados"></div>
 
-<div class="card warning">
-<h4>⚠️ Bajo Stock</h4>
-<h2>{{ bajo_stock or 0 }}</h2>
-</div>
-
-<div class="card danger">
-<h4>🚨 Agotados</h4>
-<h2>{{ agotados or 0 }}</h2>
-</div>
+<form method="POST">
+    <input type="hidden" name="code" id="code">
+    <input type="hidden" name="qty" value="1">
+</form>
 
 </div>
 
-<!-- 📈 GRÁFICA -->
-<canvas id="ventasChart" style="margin-top:20px;"></canvas>
+<!-- 💰 DERECHA -->
+<div class="right">
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<h3>🧾 Ticket</h3>
 
-<script id="chart-data" type="application/json">
+<table class="table">
+<tr>
+<th>Producto</th>
+<th>Cant</th>
+<th>$</th>
+</tr>
+
+{% for i in items %}
+<tr class="{% if i.product.quantity == 0 %}out-stock{% elif i.product.quantity <= 5 %}low-stock{% endif %}">
+<td>{{ i.product.name }}</td>
+<td>{{ i.qty }}</td>
+<td>${{ i.price }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+<h2>Total: ${{ total or 0 }}</h2>
+
+<hr>
+
+<!-- 💳 MÉTODO DE PAGO -->
+<label>Método de pago:</label>
+<select id="metodo_pago">
+<option value="efectivo">💵 Efectivo</option>
+<option value="tarjeta">💳 Tarjeta</option>
+</select>
+
+<br><br>
+
+<!-- 💵 PAGO -->
+<input type="number" id="pago" placeholder="Dinero recibido">
+
+<p>Cambio: $<span id="cambio">0</span></p>
+
+<br>
+
+<button class="btn-cobrar" onclick="cobrar()">💰 COBRAR</button>
+
+<br><br>
+
+<button class="btn-cancelar" onclick="window.location.reload()">❌ Cancelar</button>
+
+</div>
+
+</div>
+
+<!-- 🔊 SONIDO -->
+<audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+
+<!-- 📦 BUSCADOR -->
+<script>
+const buscador = document.getElementById("buscador");
+const resultados = document.getElementById("resultados");
+
+buscador.addEventListener("input", async () => {
+    const q = buscador.value;
+
+    if(q.length < 2){
+        resultados.innerHTML = "";
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/productos?q=${q}`);
+        const data = await res.json();
+
+        resultados.innerHTML = data.map(p => `
+            <div onclick="agregarProducto('${p.code}')">
+                ${p.name} - $${p.price}
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error("Error buscando productos", e);
+    }
+});
+
+function agregarProducto(code){
+    document.getElementById("code").value = code;
+    document.forms[0].submit();
+}
+</script>
+
+<!-- 💰 COBRO -->
+<script id="data" type="application/json">
 {
-    "labels": {{ dias | default([]) | tojson }},
-    "data": {{ ventas_dias | default([]) | tojson }}
+    "total": {{ total | default(0) | tojson }}
 }
 </script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    const canvas = document.getElementById('ventasChart');
-
-    if (!canvas) {
-        console.error("Canvas no encontrado");
-        return;
-    }
-
-    const raw = document.getElementById('chart-data').textContent;
-    const parsed = JSON.parse(raw);
-
-    const ctx = canvas.getContext('2d');
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: parsed.labels || [],
-            datasets: [{
-                label: 'Ventas últimos 7 días',
-                data: parsed.data || [],
-                tension: 0.4,
-                fill: true
-            }]
-        }
-    });
-
-});
+const parsed = JSON.parse(document.getElementById("data").textContent);
+const total = parsed.total;
 </script>
 
-<br>
+document.getElementById("pago").addEventListener("input", function(){
+    let pago = parseFloat(this.value) || 0;
+    let cambio = pago - total;
+    document.getElementById("cambio").innerText = cambio.toFixed(2);
+});
 
-<!-- 🏆 Top productos -->
-<h3>🏆 Productos más vendidos</h3>
-<table class="table">
-<thead>
-<tr>
-<th>Producto</th>
-<th>Cantidad</th>
-</tr>
-</thead>
-<tbody>
-{% for p in productos_top or [] %}
-<tr>
-<td>{{ p[0] }}</td>
-<td>{{ p[1] }}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
+function cobrar(){
+    document.getElementById("sound").play();
 
-<!-- 🕒 Últimas ventas -->
-<h3>🕒 Últimas ventas</h3>
-<ul>
-{% for v in ventas_recientes or [] %}
-<li>Venta #{{ v.id }} - ${{ v.total }}</li>
-{% endfor %}
-</ul>
+    setTimeout(() => {
+        window.location.href = "/ventas/{{ sale.id }}/finalizar";
+    }, 500);
+}
+</script>
 
 {% endblock %}
