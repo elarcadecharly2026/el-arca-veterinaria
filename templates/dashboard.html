@@ -1,69 +1,132 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>Dashboard</h2>
+<h2 style="margin-bottom:20px;">📊 Dashboard</h2>
 
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
+<style>
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.card h4 {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+.card h2 {
+    margin: 5px 0 0;
+}
+.green { color: green; }
+.red { color: red; }
+.warning { background: #fff3cd; }
+.danger { background: #f8d7da; }
+</style>
 
-  <div class="card">
-    <b>Ventas Hoy</b><br>
-    ${{ ventas_hoy }}
-  </div>
+<div class="grid">
 
-  <div class="card">
-    <b>Ventas Mes</b><br>
-    ${{ ventas_mes }}
-  </div>
+<div class="card">
+<h4>💰 Ventas Hoy</h4>
+<h2>${{ ventas_hoy or 0 }}</h2>
+<p class="{{ 'green' if (crecimiento or 0) >= 0 else 'red' }}">
+{{ crecimiento or 0 }}%
+</p>
+</div>
 
-  <div class="card">
-    <b>Bajo Stock</b><br>
-    {{ bajo_stock }}
-  </div>
+<div class="card">
+<h4>📅 Ventas Mes</h4>
+<h2>${{ ventas_mes or 0 }}</h2>
+</div>
 
-  <div class="card">
-    <b>Productos</b><br>
-    {{ productos }}
-  </div>
+<div class="card">
+<h4>🧾 Ventas Hoy</h4>
+<h2>{{ ventas_count or 0 }}</h2>
+</div>
+
+<div class="card">
+<h4>💳 Ticket Promedio</h4>
+<h2>${{ ticket_promedio or 0 }}</h2>
+</div>
+
+<div class="card warning">
+<h4>⚠️ Bajo Stock</h4>
+<h2>{{ bajo_stock or 0 }}</h2>
+</div>
+
+<div class="card danger">
+<h4>🚨 Agotados</h4>
+<h2>{{ agotados or 0 }}</h2>
+</div>
 
 </div>
 
-<h3>Productos más vendidos</h3>
+<!-- 📈 Gráfica -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script id="chart-data" type="application/json">
+{
+    "labels": {{ dias | default([]) | tojson }},
+    "data": {{ ventas_dias | default([]) | tojson }}
+}
+</script>
+
+<script>
+const canvas = document.getElementById('ventasChart');
+
+if (canvas) {
+    const raw = document.getElementById('chart-data').textContent;
+    const parsed = JSON.parse(raw);
+
+    const ctx = canvas.getContext('2d');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: parsed.labels,
+            datasets: [{
+                label: 'Ventas últimos 7 días',
+                data: parsed.data,
+                tension: 0.4
+            }]
+        }
+    });
+} else {
+    console.error("Canvas no encontrado");
+}
+</script>
+
+<!-- 🏆 Top productos -->
+<h3>🏆 Productos más vendidos</h3>
 <table class="table">
-  <thead>
-    <tr>
-      <th>Producto</th>
-      <th>Cantidad</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for p in productos_mas_vendidos %}
-    <tr>
-      <td>{{ p[0] }}</td>
-      <td>{{ p[1] }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
+<thead>
+<tr>
+<th>Producto</th>
+<th>Cantidad</th>
+</tr>
+</thead>
+<tbody>
+{% for p in productos_top or [] %}
+<tr>
+<td>{{ p[0] }}</td>
+<td>{{ p[1] }}</td>
+</tr>
+{% endfor %}
+</tbody>
 </table>
 
-<canvas id="ventasChart"></canvas>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-const ctx = document.getElementById('ventasChart');
-
-const ventasHoy = parseFloat("{{ ventas_hoy or 0 }}");
-const ventasMes = parseFloat("{{ ventas_mes or 0 }}");
-
-new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: ["Hoy", "Mes"],
-        datasets: [{
-            label: "Ventas",
-            data: [ventasHoy, ventasMes]
-        }]
-    }
-});
-</script>
+<!-- 🕒 Últimas ventas -->
+<h3>🕒 Últimas ventas</h3>
+<ul>
+{% for v in ventas_recientes or [] %}
+<li>Venta #{{ v.id }} - ${{ v.total }}</li>
+{% endfor %}
+</ul>
 
 {% endblock %}
