@@ -9,7 +9,6 @@ from sqlalchemy.orm import sessionmaker, declarative_base, relationship, scoped_
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
 from datetime import datetime
-from models import Product, SaleItem
 
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
@@ -1124,42 +1123,12 @@ def inventory_edit(pid):
 def inventory_delete(pid):
     db = SessionLocal()
     try:
-        p = db.get(Product, pid)
-        if not p:
-            flash('Producto no encontrado', 'error')
-            return redirect(url_for('inventory_list'))
-        
-        # Guardar nombre ANTES de eliminar (después del commit SQLAlchemy expira los atributos)
-        product_name = p.name
-
-        # 1. Eliminar TODOS los sale_items de este producto (evita foreign key)
-        sale_items = db.query(SaleItem).filter(SaleItem.product_id == pid).all()
-        deleted_items = len(sale_items)
-        for item in sale_items:
-            db.delete(item)
-        
-        # 2. Eliminar imagen si existe
-        if p.image:
-            img_path = os.path.join(app.config['UPLOAD_FOLDER'], p.image)
-            if os.path.exists(img_path):
-                try:
-                    os.remove(img_path)
-                except OSError:
-                    pass
-        
-        # 3. Eliminar producto
-        db.delete(p)
-        db.commit()
-        
-        flash(f'Producto "{product_name}" eliminado. Se borraron {deleted_items} ítems de venta asociados.', 'success')
-        
-    except Exception as e:
-        db.rollback()
-        app.logger.error(f"DELETE PRODUCT {pid}: {str(e)}")
-        flash(f'Error: {str(e)[:100]}', 'error')
+        p = db.get(Product, pid) or abort(404)
+        db.delete(p); db.commit()
+        audit("delete_product","inventory",{"id":pid})
+        flash("Producto eliminado","success")
     finally:
         db.close()
-    
     return redirect(url_for("inventory_list"))
 
 # CSV export/import
@@ -1228,70 +1197,102 @@ def add_inventory():
             # Guarda 'path' en BD
 
 # ================== Routes: Sales ==================
+
 @app.route("/ventas/nueva", methods=["GET","POST"])
 #@login_required
 def nueva_venta():
     db = SessionLocal()
     try:
         sale = db.query(Sale).filter_by(status="open").order_by(Sale.id.desc()).first()
+
         if not sale:
-            sale = Sale(status="open"); db.add(sale); db.commit()
+            sale = Sale(status="open")
+            db.add(sale)
+            db.commit()
+
         if request.method == "POST":
             code = (request.form.get("code") or "").strip()
             qty = float(request.form.get("qty") or 1)
+
             prod = db.query(Product).filter_by(code=code).first()
             if not prod:
                 flash("Producto no encontrado","error")
             else:
-                it = SaleItem(sale_id=sale.id, product_id=prod.id, qty=qty, price=prod.price)
-                db.add(it); db.commit()
-        items=(db.query(SaleItem).filter_by(sale_id=sale.id).options(joinedload(SaleItem.product)).all())
-        total = sum(i.qty*i.price for i in items)
-        
+                it = SaleItem(
+                    sale_id=sale.id,
+                    product_id=prod.id,
+                    qty=qty,
+                    price=prod.price
+                )
+                db.add(it)
+                db.commit()
+
+        items = db.query(SaleItem)\
+            .filter_by(sale_id=sale.id)\
+            .options(joinedload(SaleItem.product)).all()
+
+        total = sum(i.qty * i.price for i in items)
 
         discount_pct = float(request.form.get('discount_pct', 0) or 0) / 100
         total = total * (1 - discount_pct)
 
         return render_template("sale_new.html", sale=sale, items=items, total=total)
+
     finally:
         db.close()
+
+
+# ================== Ventas internas ==================
 
 @app.route('/ventas/interna', methods=['GET', 'POST'])
 @login_required
 def ventas_interna():
     db = SessionLocal()
     try:
-        # Solo staff puede crear ventas internas
         if current_user.role != 'staff':
             flash('Solo staff para ventas internas', 'error')
             return redirect(url_for('nueva_venta'))
-            
+
         sale = db.query(Sale).filter_by(status='open').order_by(Sale.id.desc()).first()
+
         if not sale:
-            sale = Sale(status='open', internal=True)  # ← Marca como interna
+            sale = Sale(status='open', internal=True)
             db.add(sale)
             db.commit()
-            
+
         if request.method == 'POST':
             code = request.form.get('code') or ''
             qty = float(request.form.get('qty') or 1)
+
             prod = db.query(Product).filter_by(code=code).first()
             if not prod:
                 flash('Producto no encontrado', 'error')
             else:
-                it = SaleItem(sale_id=sale.id, product_id=prod.id, qty=qty, price=prod.price)
+                it = SaleItem(
+                    sale_id=sale.id,
+                    product_id=prod.id,
+                    qty=qty,
+                    price=prod.price
+                )
                 db.add(it)
                 db.commit()
-                
-        items = db.query(SaleItem).filter_by(sale_id=sale.id).options(joinedload(SaleItem.product)).all()
+
+        items = db.query(SaleItem)\
+            .filter_by(sale_id=sale.id)\
+            .options(joinedload(SaleItem.product)).all()
+
         total = sum(i.qty * i.price for i in items)
+
         discount_pct = float(request.form.get('discount_pct', 0) or 0) / 100
         total = total * (1 - discount_pct)
-        
+
         return render_template('sale_new.html', sale=sale, items=items, total=total)
+
     finally:
         db.close()
 
+
+# ================== Eliminar item ==================
 
 @app.post("/ventas/<int:sale_id>/item/<int:item_id>/delete")
 #@login_required
@@ -1299,23 +1300,65 @@ def venta_item_delete(sale_id, item_id):
     db = SessionLocal()
     try:
         it = db.get(SaleItem, item_id) or abort(404)
-        db.delete(it); db.commit()
+        db.delete(it)
+        db.commit()
         return redirect(url_for("nueva_venta"))
     finally:
         db.close()
 
+
+# ================== Finalizar venta ==================
+
 @app.post('/ventas/<int:sale_id>/finalizar')
-#@login_required
 def ventafinalizar(sale_id):
     db = SessionLocal()
     try:
         sale = db.get(Sale, sale_id) or abort(404)
+
         if sale.status != 'open':
             flash('La venta ya fue cerrada', 'error')
             return redirect(url_for('nueva_venta'))
 
-            from datetime import datetime
-from sqlalchemy import func
+        items_data = []
+
+        for it in sale.items:
+            prod = db.get(Product, it.product_id)
+            if prod:
+                prod.quantity = max(0.0, (prod.quantity or 0.0) - (it.qty or 0.0))
+
+            items_data.append({
+                'product_id': it.product_id,
+                'qty': it.qty
+            })
+
+        total = sum((i.qty or 0) * (i.price or 0) for i in sale.items)
+        sale.total = total
+        sale.status = 'done'
+
+        db.commit()
+
+        # audit opcional (no rompe si no existe)
+        try:
+            audit('finalizesale', 'sales', {
+                'sale_id': sale.id,
+                'items': items_data
+            })
+        except:
+            pass
+
+        flash('Venta finalizada', 'success')
+
+    except Exception as e:
+        db.rollback()
+        flash(f'Error: {e}', 'error')
+
+    finally:
+        db.close()
+
+    return redirect(url_for('nueva_venta'))
+
+
+# ================== Reportes ==================
 
 @app.route('/reportes')
 def reportes():
@@ -1357,43 +1400,9 @@ def reportes():
             ventas_empleados=ventas_empleados,
             productos=productos
         )
-    finally:
-        db.close()
-        
-        # ✅ GUARDAR DATOS ANTES del commit
-        items_data = []
-        for it in sale.items:
-            prod = db.get(Product, it.productid)
-            if prod:
-                prod.quantity = max(0.0, prod.quantity or 0.0 - it.qty or 0.0)
-            # Guardar info para audit SIN acceder a lazy loading
-            items_data.append({
-                'product_id': it.productid,
-                'code': getattr(it.product, 'code', 'N/A') if it.product else 'N/A',  # Seguro
-                'qty': it.qty
-            })
-        
-        discountpct = float(request.form.get('discountpct', 0) or 0) / 100
-        sale.total = sum(i.qty * i.price for i in sale.items) * (1 - discountpct)
-        sale.status = 'done'
-        
-        db.commit()
-        
-        # ✅ Audit con datos ya guardados (SESION ABIERTA)
-        audit('finalizesale', 'sales', {
-            'sale_id': sale.id, 
-            'items': items_data
-        })
-        flash('Venta finalizada', 'success')
-        
-    except Exception as e:
-        db.rollback()
-        flash(f'Error: {e}', 'error')
-    finally:
-        db.close()
-    
-    return redirect(url_for('nueva_venta'))
 
+    finally:
+        db.close()
 
 # ================== Routes: Users (admin) ==================
 @app.route("/users")
@@ -1962,35 +1971,100 @@ if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
 
 
-
 # ===============================
-# DASHBOARD ESTADISTICAS
+# dashboard estadisticas
 # ===============================
-@app.route("/dashboard")
-@login_required
+@app.route('/dashboard')
 def dashboard():
     db = SessionLocal()
     try:
-        ventas_hoy = db.query(func.sum(SaleItem.price * SaleItem.quantity))\
-            .join(Sale)\
-            .filter(func.date(Sale.created_at) == func.current_date())\
-            .scalar() or 0
+        from sqlalchemy import func
+        from datetime import datetime, timedelta
 
-        ventas_mes = db.query(func.sum(SaleItem.price * SaleItem.quantity))\
-            .join(Sale)\
-            .filter(func.date_part('month', Sale.created_at) == func.date_part('month', func.now()))\
-            .scalar() or 0
+        hoy = datetime.utcnow().date()
+        ayer = hoy - timedelta(days=1)
+        mes = datetime.utcnow().month
 
-        bajo_stock = db.query(Product).filter(Product.quantity <= 5).count()
-        productos = db.query(Product).count()
+        # 💰 ventas hoy
+        ventas_hoy = db.query(func.sum(Sale.total)).filter(
+            func.date(Sale.created_at) == hoy
+        ).scalar() or 0
+
+        # 💰 ventas ayer
+        ventas_ayer = db.query(func.sum(Sale.total)).filter(
+            func.date(Sale.created_at) == ayer
+        ).scalar() or 0
+
+        # 📊 crecimiento %
+        crecimiento = 0
+        if ventas_ayer > 0:
+            crecimiento = ((ventas_hoy - ventas_ayer) / ventas_ayer) * 100
+
+        # 📅 ventas mes
+        ventas_mes = db.query(func.sum(Sale.total)).filter(
+            func.extract('month', Sale.created_at) == mes
+        ).scalar() or 0
+
+        # 🧾 número de ventas hoy
+        ventas_count = db.query(func.count(Sale.id)).filter(
+            func.date(Sale.created_at) == hoy
+        ).scalar() or 0
+
+        # 💳 ticket promedio
+        ticket_promedio = ventas_hoy / ventas_count if ventas_count else 0
+
+        # ⚠️ bajo stock
+        bajo_stock = db.query(func.count(Product.id)).filter(
+            Product.quantity < 5
+        ).scalar() or 0
+
+        # 🚨 agotados
+        agotados = db.query(func.count(Product.id)).filter(
+            Product.quantity == 0
+        ).scalar() or 0
+
+        # 📈 ventas últimos 7 días
+        dias = []
+        ventas_dias = []
+
+        for i in range(6, -1, -1):
+            dia = hoy - timedelta(days=i)
+
+            total = db.query(func.sum(Sale.total)).filter(
+                func.date(Sale.created_at) == dia
+            ).scalar() or 0
+
+            dias.append(dia.strftime("%d/%m"))
+            ventas_dias.append(float(total))
+
+        # 🏆 productos más vendidos
+        productos_top = db.query(
+            Product.name,
+            func.sum(SaleItem.qty).label('total')
+        ).join(SaleItem).group_by(Product.name)\
+         .order_by(func.sum(SaleItem.qty).desc())\
+         .limit(5).all()
+
+        # 🕒 últimas ventas
+        ventas_recientes = db.query(Sale)\
+            .order_by(Sale.id.desc())\
+            .limit(5).all()
 
         return render_template(
-            "dashboard.html",
-            ventas_hoy=round(float(ventas_hoy),2),
-            ventas_mes=round(float(ventas_mes),2),
+            'dashboard.html',
+            ventas_hoy=ventas_hoy,
+            ventas_mes=ventas_mes,
+            crecimiento=round(crecimiento, 2),
+            ticket_promedio=round(ticket_promedio, 2),
+            ventas_count=ventas_count,
             bajo_stock=bajo_stock,
-            productos=productos
+            agotados=agotados,
+            dias=dias,
+            ventas_dias=ventas_dias,
+            productos_top=productos_top,
+            ventas_recientes=ventas_recientes
         )
+
     finally:
         db.close()
 
@@ -2012,6 +2086,7 @@ def backup_db():
     return send_from_directory("static/downloads", filename, as_attachment=True)
 
 
+    db.close()
 
 # ===============================
 # GOOGLE OAUTH LOGIN
