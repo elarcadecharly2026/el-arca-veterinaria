@@ -2005,7 +2005,7 @@ def dashboard():
             func.extract('month', Sale.created_at) == mes
         ).scalar() or 0
 
-        # 🧾 número de ventas hoy
+        # 🧾 número de ventas hoy ✅ (FALTABA)
         ventas_count = db.query(func.count(Sale.id)).filter(
             func.date(Sale.created_at) == hoy
         ).scalar() or 0
@@ -2041,7 +2041,8 @@ def dashboard():
         productos_top = db.query(
             Product.name,
             func.sum(SaleItem.qty).label('total')
-        ).join(SaleItem).group_by(Product.name)\
+        ).join(SaleItem)\
+         .group_by(Product.name)\
          .order_by(func.sum(SaleItem.qty).desc())\
          .limit(5).all()
 
@@ -2050,6 +2051,7 @@ def dashboard():
             .order_by(Sale.id.desc())\
             .limit(5).all()
 
+        # ✅ TODO DENTRO DEL TRY
         return render_template(
             'dashboard.html',
             ventas_hoy=ventas_hoy,
@@ -2064,6 +2066,10 @@ def dashboard():
             productos_top=productos_top,
             ventas_recientes=ventas_recientes
         )
+
+    except Exception as e:
+        db.rollback()
+        return f"Error en dashboard: {e}"
 
     finally:
         db.close()
