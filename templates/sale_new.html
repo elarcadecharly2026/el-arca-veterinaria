@@ -1,132 +1,122 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2 style="margin-bottom:20px;">📊 Dashboard</h2>
+<h2 style="margin-bottom:20px;">🛒 Nueva Venta</h2>
 
 <style>
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
-    gap: 15px;
-    margin-bottom: 20px;
+input, select, button {
+    padding: 8px;
+    margin: 5px 0;
 }
-.card {
-    background: #fff;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+
+#resultados div {
+    padding: 5px;
+    cursor: pointer;
+    border-bottom: 1px solid #ddd;
 }
-.card h4 {
-    margin: 0;
-    font-size: 14px;
-    color: #666;
+#resultados div:hover {
+    background: #f0f0f0;
 }
-.card h2 {
-    margin: 5px 0 0;
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
 }
-.green { color: green; }
-.red { color: red; }
-.warning { background: #fff3cd; }
-.danger { background: #f8d7da; }
+.table th, .table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
 </style>
 
-<div class="grid">
+<!-- 🔎 BUSCADOR -->
+<input type="text" id="buscador" placeholder="🔎 Buscar producto..." style="width:100%;">
+<div id="resultados"></div>
 
-<div class="card">
-<h4>💰 Ventas Hoy</h4>
-<h2>${{ ventas_hoy or 0 }}</h2>
-<p class="{{ 'green' if (crecimiento or 0) >= 0 else 'red' }}">
-{{ crecimiento or 0 }}%
-</p>
-</div>
+<form method="POST">
 
-<div class="card">
-<h4>📅 Ventas Mes</h4>
-<h2>${{ ventas_mes or 0 }}</h2>
-</div>
+    <input type="text" name="code" placeholder="Código producto" required>
+    <input type="number" name="qty" value="1" step="0.1">
 
-<div class="card">
-<h4>🧾 Ventas Hoy</h4>
-<h2>{{ ventas_count or 0 }}</h2>
-</div>
+    <button type="submit">➕ Agregar</button>
 
-<div class="card">
-<h4>💳 Ticket Promedio</h4>
-<h2>${{ ticket_promedio or 0 }}</h2>
-</div>
+    <br><br>
 
-<div class="card warning">
-<h4>⚠️ Bajo Stock</h4>
-<h2>{{ bajo_stock or 0 }}</h2>
-</div>
+    <!-- 💳 MÉTODO DE PAGO -->
+    <label>Método de pago:</label>
+    <select name="metodo_pago">
+        <option value="efectivo">💵 Efectivo</option>
+        <option value="tarjeta">💳 Tarjeta</option>
+    </select>
 
-<div class="card danger">
-<h4>🚨 Agotados</h4>
-<h2>{{ agotados or 0 }}</h2>
-</div>
+    <br><br>
 
-</div>
+    <button type="submit" onclick="sonido()">💰 Finalizar venta</button>
 
-<!-- 📈 Gráfica -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</form>
 
-<script id="chart-data" type="application/json">
-{
-    "labels": {{ dias | default([]) | tojson }},
-    "data": {{ ventas_dias | default([]) | tojson }}
-}
-</script>
+<hr>
 
-<script>
-const canvas = document.getElementById('ventasChart');
+<h3>🧾 Productos</h3>
 
-if (canvas) {
-    const raw = document.getElementById('chart-data').textContent;
-    const parsed = JSON.parse(raw);
-
-    const ctx = canvas.getContext('2d');
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: parsed.labels,
-            datasets: [{
-                label: 'Ventas últimos 7 días',
-                data: parsed.data,
-                tension: 0.4
-            }]
-        }
-    });
-} else {
-    console.error("Canvas no encontrado");
-}
-</script>
-
-<!-- 🏆 Top productos -->
-<h3>🏆 Productos más vendidos</h3>
 <table class="table">
-<thead>
 <tr>
-<th>Producto</th>
-<th>Cantidad</th>
+    <th>Producto</th>
+    <th>Cantidad</th>
+    <th>Precio</th>
 </tr>
-</thead>
-<tbody>
-{% for p in productos_top or [] %}
+
+{% for i in items %}
 <tr>
-<td>{{ p[0] }}</td>
-<td>{{ p[1] }}</td>
+    <td>{{ i.product.name }}</td>
+    <td>{{ i.qty }}</td>
+    <td>${{ i.price }}</td>
 </tr>
 {% endfor %}
-</tbody>
+
 </table>
 
-<!-- 🕒 Últimas ventas -->
-<h3>🕒 Últimas ventas</h3>
-<ul>
-{% for v in ventas_recientes or [] %}
-<li>Venta #{{ v.id }} - ${{ v.total }}</li>
-{% endfor %}
-</ul>
+<h3>Total: ${{ total }}</h3>
+
+<!-- 🔔 SONIDO -->
+<audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+
+<script>
+function sonido(){
+    document.getElementById("sound").play();
+}
+</script>
+
+<!-- 🔎 BUSCADOR JS -->
+<script>
+const buscador = document.getElementById("buscador");
+const resultados = document.getElementById("resultados");
+
+buscador.addEventListener("input", async () => {
+    const q = buscador.value;
+
+    if(q.length < 2){
+        resultados.innerHTML = "";
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/productos?q=${q}`);
+        const data = await res.json();
+
+        resultados.innerHTML = data.map(p => `
+            <div onclick="selectProducto('${p.code}')">
+                ${p.name} - $${p.price}
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error("Error buscando productos", e);
+    }
+});
+
+function selectProducto(code){
+    document.querySelector("input[name='code']").value = code;
+    resultados.innerHTML = "";
+}
+</script>
 
 {% endblock %}
