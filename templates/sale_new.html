@@ -4,22 +4,12 @@
 <h2 style="margin-bottom:20px;">🛒 Caja Registradora</h2>
 
 <style>
-body {
-    background: #f5f6fa !important;
-}
+body { background: #f5f6fa !important; }
 
-/* Layout */
-.pos {
-    display: flex;
-    gap: 20px;
-}
+.pos { display: flex; gap: 20px; }
 
-/* Panel izquierdo */
-.left {
-    flex: 2;
-}
+.left { flex: 2; }
 
-/* Panel derecho */
 .right {
     flex: 1;
     background: #fff;
@@ -28,7 +18,6 @@ body {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-/* Buscador */
 #buscador {
     width: 100%;
     padding: 10px;
@@ -40,50 +29,33 @@ body {
     cursor: pointer;
     border-bottom: 1px solid #eee;
 }
+#resultados div:hover { background: #f0f0f0; }
 
-#resultados div:hover {
-    background: #f0f0f0;
-}
-
-/* Tabla */
 .table {
     width: 100%;
     border-collapse: collapse;
 }
-
 .table th, .table td {
     padding: 8px;
     border-bottom: 1px solid #ddd;
-}
-
-/* Botones */
-button {
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
 }
 
 .btn-cobrar {
     background: #28a745;
     color: white;
     width: 100%;
+    padding: 12px;
 }
 
 .btn-cancelar {
     background: red;
     color: white;
     width: 100%;
+    padding: 12px;
 }
 
-/* Stock bajo */
-.low-stock {
-    background: #fff3cd;
-}
-
-.out-stock {
-    background: #f8d7da;
-}
+.low-stock { background: #fff3cd; }
+.out-stock { background: #f8d7da; }
 </style>
 
 <div class="pos">
@@ -96,7 +68,7 @@ button {
 <input type="text" id="buscador" placeholder="Escanea o escribe...">
 <div id="resultados"></div>
 
-<form method="POST">
+<form method="POST" id="form-add">
     <input type="hidden" name="code" id="code">
     <input type="hidden" name="qty" value="1">
 </form>
@@ -129,7 +101,6 @@ button {
 
 <hr>
 
-<!-- 💳 MÉTODO DE PAGO -->
 <label>Método de pago:</label>
 <select id="metodo_pago">
 <option value="efectivo">💵 Efectivo</option>
@@ -138,28 +109,38 @@ button {
 
 <br><br>
 
-<!-- 💵 PAGO -->
 <input type="number" id="pago" placeholder="Dinero recibido">
 
-<p>Cambio: $<span id="cambio">0</span></p>
+<p>Cambio: $<span id="cambio">0.00</span></p>
 
 <br>
 
-<button class="btn-cobrar" onclick="cobrar()">💰 COBRAR</button>
+<button type="button" class="btn-cobrar" onclick="cobrar()">💰 COBRAR</button>
 
 <br><br>
 
-<button class="btn-cancelar" onclick="window.location.reload()">❌ Cancelar</button>
+<button type="button" class="btn-cancelar" onclick="cancelar()">❌ Cancelar</button>
 
 </div>
 
 </div>
 
-<!-- 🔊 SONIDO -->
 <audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
 
-<!-- 📦 BUSCADOR -->
+<!-- 🔥 TODO EL JS CORRECTO -->
+
+<script id="data" type="application/json">
+{
+    "total": {{ total | default(0) | tojson }}
+}
+</script>
+
 <script>
+const parsed = JSON.parse(document.getElementById("data").textContent);
+const total = parsed.total;
+</script>
+
+// 🔎 BUSCADOR
 const buscador = document.getElementById("buscador");
 const resultados = document.getElementById("resultados");
 
@@ -187,34 +168,36 @@ buscador.addEventListener("input", async () => {
 
 function agregarProducto(code){
     document.getElementById("code").value = code;
-    document.forms[0].submit();
+    document.getElementById("form-add").submit();
 }
-</script>
 
-<!-- 💰 COBRO -->
-<script id="data" type="application/json">
-{
-    "total": {{ total | default(0) | tojson }}
-}
-</script>
-
-<script>
-const parsed = JSON.parse(document.getElementById("data").textContent);
-const total = parsed.total;
-</script>
-
+// 💰 CAMBIO EN VIVO
 document.getElementById("pago").addEventListener("input", function(){
     let pago = parseFloat(this.value) || 0;
     let cambio = pago - total;
     document.getElementById("cambio").innerText = cambio.toFixed(2);
 });
 
+// 💰 COBRAR
 function cobrar(){
+
+    let pago = parseFloat(document.getElementById("pago").value) || 0;
+
+    if(pago < total){
+        alert("❌ Dinero insuficiente");
+        return;
+    }
+
     document.getElementById("sound").play();
 
     setTimeout(() => {
-        window.location.href = "/ventas/{{ sale.id }}/finalizar";
-    }, 500);
+        window.location.href = "/ventas/finalizar";
+    }, 400);
+}
+
+// ❌ CANCELAR
+function cancelar(){
+    window.location.href = "/ventas/cancelar";
 }
 </script>
 
