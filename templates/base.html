@@ -17,50 +17,57 @@
         <div class="sub">Sistema Veterinario</div>
       </div>
     </div>
-    <nav class="menu">
-      <a href="{{ safe_url('index') }}">🏠 Inicio</a>
-      
-      <li class="menu-item">
-        <a href="{{ url_for('inventory_list') }}"
-          class="menu-toggle"
-          onclick="toggleMenu('inv-menu', event)">
-          ▼ Inventario 
-        </a>
-        
-        <ul id="inv-menu" class="submenu">
-          <li><a href="{{ safe_url('inventory_list') }}" style="padding: 0px 7px;">Inventario General</a></li>
-          <li><a href="{{ safe_url('suppliers_list') }}" style="padding: 0px 7px;">Proveedores</a></li>
-          <li><a href="{{ safe_url('contacts_list') }}" style="padding: 0px 7px">Contactos</a></li>
-          <li>
-    <a href="#">📄 Ventas</a>
-    <ul>
-        <li><a href="/ventas/nueva">🛒 Nueva venta</a></li>
-        <li><a href="/dashboard">📊 Dashboard</a></li>
-    </ul>
-</li>
-        </ul>
-      </li>
+   <nav class="menu">
 
-      <a href="{{ safe_url('nueva_venta') }}">🧾 Ventas</a>
-      <a href="{{ safe_url('audit_list') }}">🧮 Auditoría</a>
-      <a href="{{ safe_url('admin_datos') }}">⚙️ Administrativo</a>
-      <a href="{{ safe_url('users_list') }}">👤 Usuarios</a>
-      <a href="{{ safe_url('documentos') }}">📄 Documentos</a>
-      <a href="{{ safe_url('autho') }}">🛂 Autorizaciones</a>
-      <a href="{{ safe_url('citas') }}">📅 Citas</a>
-      <a class="nav-link" href="{{ url_for('historial_clinico') }}">🩺 Historial Clínico</a>
+  <a href="{{ safe_url('index') }}">🏠 Inicio</a>
 
-      <li class="menu-item">
-        <a href="{{ url_for('estetica') }}" class="menu-toggle" onclick="toggleMenu('serv-menu', event)">
-          ✂️ Estética
-        </a>
-        <ul id="serv-menu" class="submenu">
-          <li><a style="padding: 1% 2%;" href="{{ url_for('estetica_servicios') }}">Servicios Registrados</a></li>
-        </ul>
-      </li>
+  <!-- INVENTARIO -->
+  <div class="menu-item">
+    <a href="#" class="menu-toggle" onclick="toggleMenu('inv-menu', event)">
+      📦 Inventario
+    </a>
 
-      <a href="{{ safe_url('logout') }}">🔓 Salir</a>
-    </nav>
+    <div id="inv-menu" class="submenu">
+      <a href="{{ safe_url('inventory_list') }}">Inventario General</a>
+      <a href="{{ safe_url('suppliers_list') }}">Proveedores</a>
+      <a href="{{ safe_url('contacts_list') }}">Contactos</a>
+    </div>
+  </div>
+
+  <!-- VENTAS -->
+  <div class="menu-item">
+    <a href="#" class="menu-toggle" onclick="toggleMenu('ventas-menu', event)">
+      💰 Ventas
+    </a>
+
+    <div id="ventas-menu" class="submenu">
+      <a href="/ventas/nueva">🛒 Nueva venta</a>
+      <a href="/dashboard">📊 Dashboard</a>
+    </div>
+  </div>
+
+  <a href="{{ safe_url('audit_list') }}">🧮 Auditoría</a>
+  <a href="{{ safe_url('admin_datos') }}">⚙️ Administrativo</a>
+  <a href="{{ safe_url('users_list') }}">👤 Usuarios</a>
+  <a href="{{ safe_url('documentos') }}">📄 Documentos</a>
+  <a href="{{ safe_url('autho') }}">🛂 Autorizaciones</a>
+  <a href="{{ safe_url('citas') }}">📅 Citas</a>
+  <a href="{{ url_for('historial_clinico') }}">🩺 Historial Clínico</a>
+
+  <!-- ESTETICA -->
+  <div class="menu-item">
+    <a href="#" class="menu-toggle" onclick="toggleMenu('serv-menu', event)">
+      ✂️ Estética
+    </a>
+
+    <div id="serv-menu" class="submenu">
+      <a href="{{ url_for('estetica_servicios') }}">Servicios</a>
+    </div>
+  </div>
+
+  <a href="{{ safe_url('logout') }}">🔓 Salir</a>
+
+</nav>
   </aside>
   
   <main class="main">
