@@ -305,28 +305,32 @@ Base.metadata.create_all(engine) #<--IMPORTANTE
 # ===============================
 def run_migrations():
     from sqlalchemy import text
-    with engine.connect() as conn:
-        try:
-            # Verificar si la columna email existe en owners
-            conn.execute(text("SELECT email FROM owners LIMIT 1"))
-        except Exception:
+    
+    # Función auxiliar para añadir columnas de forma segura
+    def add_column_if_not_exists(table, column, col_type):
+        with engine.connect() as conn:
             try:
-                print("Añadiendo columna email a la tabla owners...")
-                conn.execute(text("ALTER TABLE owners ADD COLUMN email VARCHAR(120)"))
-                conn.commit()
+                # Usar una consulta nativa de PostgreSQL para verificar la existencia de la columna
+                check_query = text(f"""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name='{table}' AND column_name='{column}'
+                """)
+                result = conn.execute(check_query).fetchone()
+                
+                if not result:
+                    print(f"Añadiendo columna {column} a la tabla {table}...")
+                    # Ejecutar el ALTER TABLE en una transacción limpia
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
+                    conn.commit()
+                    print(f"Columna {column} añadida con éxito.")
+                else:
+                    print(f"La columna {column} ya existe en {table}.")
             except Exception as e:
-                print(f"Error en migración: {e}")
-        
-        try:
-            # Verificar si la columna image existe en products
-            conn.execute(text("SELECT image FROM products LIMIT 1"))
-        except Exception:
-            try:
-                print("Añadiendo columna image a la tabla products...")
-                conn.execute(text("ALTER TABLE products ADD COLUMN image VARCHAR(200)"))
-                conn.commit()
-            except Exception as e:
-                print(f"Error en migración: {e}")
+                print(f"Error al migrar {table}.{column}: {e}")
+
+    # Ejecutar migraciones una por una
+    add_column_if_not_exists("owners", "email", "VARCHAR(120)")
+    add_column_if_not_exists("products", "image", "VARCHAR(200)")
 
 run_migrations()
 
