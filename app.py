@@ -225,6 +225,7 @@ class Owner(Base):
     postal_code = Column(String(10))
     city = Column(String(50))
     phone = Column(String(20))
+    email = Column(String(120))
     notes = Column(Text)
     pets = relationship("Pet", back_populates="owner")  # Relación uno-a-muchos 
 
@@ -520,6 +521,7 @@ def nueva_mascota():
                 postal_code=form_data.get('postalcode'),
                 city=form_data.get('city'),
                 phone=form_data.get('phone'),
+                email=form_data.get('email'),
                 notes=form_data.get('notes', '')
             )
             db.add(owner)
