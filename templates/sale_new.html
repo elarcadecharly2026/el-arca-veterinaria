@@ -211,23 +211,28 @@ document.getElementById("pago").addEventListener("input", function(){
 
 	    document.getElementById("sound").play();
 
-	    // Crear un formulario temporal para enviar el POST de finalización
-	    const form = document.createElement('form');
-	    form.method = 'POST';
-	    form.action = `/ventas/{{ sale.id }}/finalizar`;
-	    
-	    const inputMetodo = document.createElement('input');
-	    inputMetodo.type = 'hidden';
-	    inputMetodo.name = 'metodo_pago';
-	    inputMetodo.value = metodo;
-	    form.appendChild(inputMetodo);
+		    // Crear un formulario temporal para enviar el POST de finalización
+		    const form = document.createElement('form');
+		    form.method = 'POST';
+		    form.action = `/ventas/{{ sale.id }}/finalizar`;
+		    
+		    const inputMetodo = document.createElement('input');
+		    inputMetodo.type = 'hidden';
+		    inputMetodo.name = 'metodo_pago';
+		    inputMetodo.value = metodo;
+		    form.appendChild(inputMetodo);
 
-	    document.body.appendChild(form);
-	    
-	    setTimeout(() => {
-	        form.submit();
-	    }, 400);
-	}
+		    document.body.appendChild(form);
+		    
+		    // Limpiar la interfaz antes de enviar para dar feedback visual de reinicio
+		    document.querySelector('.right').style.opacity = '0.5';
+		    document.querySelector('.btn-cobrar').disabled = true;
+		    document.querySelector('.btn-cobrar').innerText = "PROCESANDO...";
+
+		    setTimeout(() => {
+		        form.submit();
+		    }, 400);
+		}
 
 // ❌ CANCELAR
 function cancelar(){

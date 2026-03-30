@@ -17,6 +17,8 @@
             <th>Categoría</th>
             <th>Caducidad</th>
             <th>Precio</th>
+            <th>P. Unidad</th>
+            <th>Clave SAT</th>
             <th>Cantidad</th>
             <th></th>
         </tr>
@@ -38,6 +40,8 @@
             <td>{{ i.category }}</td>
             <td>{{ i.caducidad.strftime('%Y-%m-%d') if i.caducidad else '' }}</td>
             <td>{{ '%.2f'|format(i.price or 0) }}</td>
+            <td>{{ '%.2f'|format(i.price_unit or 0) }}</td>
+            <td>{{ i.clave_sat or 'N/A' }}</td>
             <td>{{ i.quantity }}</td>
             <td>
                 <a class="link" href="{{ safe_url('inventory_edit', pid=i.id) }}">Editar</a>

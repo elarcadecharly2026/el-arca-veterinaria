@@ -66,7 +66,7 @@
       ✂️ Estética
     </a>
 
-    <div id="estetica-menu" class="submenu">
+    <div id="estetica-menu" class="submenu" style="display: block;">
       <a href="{{ url_for('estetica_servicios') }}">📋 Lista de Servicios</a>
       <a href="javascript:void(0)" onclick="openEsteticaModal()">🧼 Baños y Servicios</a>
     </div>
@@ -267,17 +267,13 @@
 
       if (!isOpen) {
         submenu.style.display = "block";
-        // marcar activo
         if (event && event.currentTarget) {
           event.currentTarget.classList.add("active");
         }
       } else {
-        // navegar al href del enlace
-        const link = event && event.currentTarget
-          ? event.currentTarget
-          : document.querySelector('.menu-toggle[onclick*="' + id + '"]');
-        if (link && link.getAttribute("href")) {
-          window.location.href = link.getAttribute("href");
+        submenu.style.display = "none";
+        if (event && event.currentTarget) {
+          event.currentTarget.classList.remove("active");
         }
       }
     }
