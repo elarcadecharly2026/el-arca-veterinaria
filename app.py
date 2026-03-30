@@ -300,6 +300,36 @@ class AppointmentBase(Base):
 
 Base.metadata.create_all(engine) #<--IMPORTANTE
 
+# ===============================
+# MIGRACIÓN AUTOMÁTICA (RENDER)
+# ===============================
+def run_migrations():
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        try:
+            # Verificar si la columna email existe en owners
+            conn.execute(text("SELECT email FROM owners LIMIT 1"))
+        except Exception:
+            try:
+                print("Añadiendo columna email a la tabla owners...")
+                conn.execute(text("ALTER TABLE owners ADD COLUMN email VARCHAR(120)"))
+                conn.commit()
+            except Exception as e:
+                print(f"Error en migración: {e}")
+        
+        try:
+            # Verificar si la columna image existe en products
+            conn.execute(text("SELECT image FROM products LIMIT 1"))
+        except Exception:
+            try:
+                print("Añadiendo columna image a la tabla products...")
+                conn.execute(text("ALTER TABLE products ADD COLUMN image VARCHAR(200)"))
+                conn.commit()
+            except Exception as e:
+                print(f"Error en migración: {e}")
+
+run_migrations()
+
 @app.route("/citas")
 @login_required
 def citas():
@@ -331,7 +361,12 @@ def cita_nueva():
                 return render_template("cita_form.html", pets=pets)
 
             # 2. CREAR LA CITA
-            fecha_completa = datetime.strptime(f"{fecha_str} {hora_str}", "%Y-%m-%d %H:%M")
+            try:
+                fecha_completa = datetime.strptime(f"{fecha_str} {hora_str}", "%Y-%m-%d %H:%M")
+            except ValueError:
+                # Intento alternativo por si el formato cambia en algunos navegadores
+                fecha_completa = datetime.strptime(f"{fecha_str} {hora_str}", "%Y-%m-%d %H:%M:%S")
+                
             cita = AppointmentBase(
                 date=fecha_completa,
                 duration=int(request.form.get("duracion") or 30),
