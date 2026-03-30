@@ -124,7 +124,11 @@ document.addEventListener("DOMContentLoaded", function () {
 <h3>🕒 Últimas ventas</h3>
 <ul>
 {% for v in ventas_recientes or [] %}
-<li>Venta #{{ v.id }} - ${{ v.total }}</li>
+<li>
+    <a href="{{ url_for('ticket_print', sale_id=v.id) }}" target="_blank">
+        📄 Venta #{{ v.id }} - ${{ v.total }}
+    </a>
+</li>
 {% endfor %}
 </ul>
 

@@ -138,14 +138,17 @@ button.danger{background:#ef4444}
   background: rgba(0,0,0,0.2);
 }
 
-.submenu li a {
-  padding: 0px 15px 1px 46px !important;
+.submenu a {
+  padding: 10px 15px 10px 46px !important;
   font-size: 14px;
   border-left: none !important;
+  display: block;
+  color: #e2e8f0;
+  transition: background 0.2s;
 }
 
-.submenu li a:hover {
-  background: rgba(0,0,0,0.3) !important;
+.submenu a:hover {
+  background: rgba(255,255,255,0.1) !important;
 }
 
 /* ========== MAIN CONTENT ========= */
@@ -213,12 +216,48 @@ button.danger{background:#ef4444}
 /* ========== RESPONSIVE ========= */
 @media (max-width: 768px) {
   .sidebar {
+    width: 240px;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
   }
   
+  .sidebar.active {
+    transform: translateX(0);
+  }
+
   .main {
     margin-left: 0 !important;
+    padding: 10px;
+  }
+
+  .btn, button {
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+
+  .table th, .table td {
+    padding: 15px 10px;
+  }
+
+  .topbar {
+    padding: 15px !important;
+  }
+}
+
+/* Botón de menú para móviles */
+.menu-btn {
+  display: none;
+  background: #1f2937;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: 15px;
+}
+
+@media (max-width: 768px) {
+  .menu-btn {
+    display: block;
   }
 }
 

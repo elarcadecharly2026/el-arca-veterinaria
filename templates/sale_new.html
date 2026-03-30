@@ -20,8 +20,18 @@ body { background: #f5f6fa !important; }
 
 #buscador {
     width: 100%;
-    padding: 10px;
-    font-size: 16px;
+    padding: 15px;
+    font-size: 18px;
+    border: 2px solid #0f1a31;
+    border-radius: 10px;
+}
+
+/* Optimización para Tablets */
+@media (max-width: 768px) {
+    .pos { flex-direction: column; }
+    .left, .right { width: 100%; }
+    .btn-cobrar, .btn-cancelar { padding: 20px; font-size: 18px; }
+    .table td, .table th { padding: 12px; font-size: 16px; }
 }
 
 #resultados div {
@@ -65,7 +75,7 @@ body { background: #f5f6fa !important; }
 
 <h3>🔎 Buscar producto</h3>
 
-<input type="text" id="buscador" placeholder="Escanea o escribe...">
+<input type="text" id="buscador" placeholder="Escanea o escribe..." autofocus onblur="this.focus()">
 <div id="resultados"></div>
 
 <form method="POST" id="form-add">
@@ -144,13 +154,25 @@ const total = parsed.total;
 const buscador = document.getElementById("buscador");
 const resultados = document.getElementById("resultados");
 
-buscador.addEventListener("input", async () => {
-    const q = buscador.value;
+	// Foco automático para el escáner
+	    window.onload = () => {
+	        document.getElementById("buscador").focus();
+	    };
 
-    if(q.length < 2){
-        resultados.innerHTML = "";
-        return;
-    }
+	    buscador.addEventListener("input", async () => {
+	        const q = buscador.value;
+
+	        // Si el escáner envía un ENTER al final (común en escáneres físicos)
+	        if(q.endsWith("\n") || q.endsWith("\r")){
+	            const cleanCode = q.trim();
+	            if(cleanCode) agregarProducto(cleanCode);
+	            return;
+	        }
+
+	        if(q.length < 2){
+	            resultados.innerHTML = "";
+	            return;
+	        }
 
     try {
         const res = await fetch(`/api/productos?q=${q}`);
@@ -178,22 +200,35 @@ document.getElementById("pago").addEventListener("input", function(){
     document.getElementById("cambio").innerText = cambio.toFixed(2);
 });
 
-// 💰 COBRAR
-function cobrar(){
+	// 💰 COBRAR
+	function cobrar(){
+	    let pago = parseFloat(document.getElementById("pago").value) || 0;
+	    let metodo = document.getElementById("metodo_pago").value;
 
-    let pago = parseFloat(document.getElementById("pago").value) || 0;
+	    if(pago < total && metodo === 'efectivo'){
+	        alert("❌ Dinero insuficiente");
+	        return;
+	    }
 
-    if(pago < total){
-        alert("❌ Dinero insuficiente");
-        return;
-    }
+	    document.getElementById("sound").play();
 
-    document.getElementById("sound").play();
+	    // Crear un formulario temporal para enviar el POST de finalización
+	    const form = document.createElement('form');
+	    form.method = 'POST';
+	    form.action = `/ventas/{{ sale.id }}/finalizar`;
+	    
+	    const inputMetodo = document.createElement('input');
+	    inputMetodo.type = 'hidden';
+	    inputMetodo.name = 'metodo_pago';
+	    inputMetodo.value = metodo;
+	    form.appendChild(inputMetodo);
 
-    setTimeout(() => {
-        window.location.href = "/ventas/finalizar";
-    }, 400);
-}
+	    document.body.appendChild(form);
+	    
+	    setTimeout(() => {
+	        form.submit();
+	    }, 400);
+	}
 
 // ❌ CANCELAR
 function cancelar(){

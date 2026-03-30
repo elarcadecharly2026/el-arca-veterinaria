@@ -1,3 +1,14 @@
+<h2>📊 Corte de caja</h2>
 
-<h2>Corte de caja</h2>
+<table>
+<tr><th>ID</th><th>Total</th></tr>
+
+{% for v in ventas %}
+<tr>
+<td>{{ v.id }}</td>
+<td>${{ v.total }}</td>
+</tr>
+{% endfor %}
+</table>
+
 <h3>Total del día: ${{ total }}</h3>

@@ -28,9 +28,9 @@
     </a>
 
     <div id="inv-menu" class="submenu">
-      <a href="{{ safe_url('inventory_list') }}">Inventario General</a>
-      <a href="{{ safe_url('suppliers_list') }}">Proveedores</a>
-      <a href="{{ safe_url('contacts_list') }}">Contactos</a>
+      <a href="{{ url_for('inventory_list') }}">📦 Inventario General</a>
+      <a href="{{ url_for('suppliers_list') }}">🚚 Proveedores</a>
+      <a href="{{ url_for('contacts_list') }}">📞 Contactos</a>
     </div>
   </div>
 
@@ -41,15 +41,15 @@
     </a>
 
     <div id="ventas-menu" class="submenu">
-      <a href="/ventas/nueva">🛒 Nueva venta</a>
-      <a href="/dashboard">📊 Dashboard</a>
+      <a href="{{ url_for('nueva_venta') }}">🛒 Nueva venta</a>
+      <a href="{{ url_for('dashboard') }}">📊 Dashboard</a>
     </div>
   </div>
 
   <a href="{{ safe_url('audit_list') }}">🧮 Auditoría</a>
   <a href="{{ safe_url('admin_datos') }}">⚙️ Administrativo</a>
   <a href="{{ safe_url('users_list') }}">👤 Usuarios</a>
-  <a href="{{ safe_url('documentos') }}">📄 Documentos</a>
+  <a href="{{ url_for('documentos') }}">📄 Documentos</a>
   <a href="{{ safe_url('autho') }}">🛂 Autorizaciones</a>
   <a href="{{ safe_url('citas') }}">📅 Citas</a>
   <a href="{{ url_for('historial_clinico') }}">🩺 Historial Clínico</a>
@@ -73,7 +73,8 @@
   <main class="main">
     <!-- TOPBAR -->
     <header class="topbar" style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;">
-      <div>
+      <div style="display: flex; align-items: center;">
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
         Panel Administrativo
       </div>
       <!-- SELECTOR DE TEMA -->
@@ -114,8 +115,23 @@
     .submenu {
       list-style: none;
       margin: 0;
-      padding-left: 20px;
+      padding-left: 0;
       display: none;
+      background: rgba(0,0,0,0.1);
+      border-radius: 8px;
+      margin: 5px 10px;
+    }
+    .submenu a {
+      display: block;
+      padding: 10px 20px;
+      font-size: 14px;
+      color: #e2e8f0;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .submenu a:hover {
+      background: rgba(255,255,255,0.1);
+      border-radius: 5px;
     }
   </style>
 
@@ -145,6 +161,23 @@
         }
       }
     }
+
+    // SCRIPT SIDEBAR MÓVIL
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('active');
+    }
+
+    // Cerrar sidebar al hacer clic fuera en móviles
+    document.addEventListener('click', function(event) {
+      const sidebar = document.querySelector('.sidebar');
+      const menuBtn = document.querySelector('.menu-btn');
+      if (window.innerWidth <= 768 && 
+          !sidebar.contains(event.target) && 
+          !menuBtn.contains(event.target) && 
+          sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+      }
+    });
 
     // SCRIPT CAMBIO DE TEMA
     const selector = document.getElementById("themeSelector");

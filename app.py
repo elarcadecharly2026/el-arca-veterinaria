@@ -12,7 +12,7 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
-from authlib.integrations.flask_client import OAuth
+# from authlib.integrations.flask_client import OAuth
 
 load_dotenv()
 
@@ -465,7 +465,7 @@ def historial_clinico():
                 .order_by(Pet.name)
                 .all())
 
-        pet_id = request.args.get("petid")  # ← MOVER ARRIBA
+        pet_id = request.args.get("pet_id") or request.args.get("petid")
         selected_pet = None
         records = []
 
@@ -578,7 +578,7 @@ def nuevo_registro(pet_id):
                 db.commit()
                 flash('Registro clínico guardado', 'success')
                 q = request.args.get('q', '')
-                return redirect(url_for('historial_clinico', petid=pet_id, q=q))
+                return redirect(url_for('historial_clinico', pet_id=pet_id, q=q))
             except Exception as e:
                 db.rollback()
                 flash(f'Error: {e}', 'error')
@@ -608,78 +608,62 @@ def editar_foto(pet_id):
                     pet.photo = filepath  # Guarda ruta relativa
             db.commit()
             flash('Foto actualizada correctamente.', 'success')
-            return redirect(url_for('historial_clinico', petid=pet_id))
+            return redirect(url_for('historial_clinico', pet_id=pet_id))
         return render_template('editar_foto.html', pet=pet)
     except Exception as e:
         if db:
             db.rollback()
         flash(f'Error: {str(e)}', 'error')
-        return redirect(url_for('historial_clinico', petid=pet_id))
+        return redirect(url_for('historial_clinico', pet_id=pet_id))
     finally:
         db.close()
 
 
-import sqlite3
-from flask import request, redirect, url_for, flash, render_template, g
-from contextlib import closing
-
-def get_db():
-    if 'db' not in g:
-        g.db = sqlite3.connect('vet.db')  # Cambia por nombre real de tu DB (busca en app.py)
-        g.db.row_factory = sqlite3.Row  # Para dict-like rows
-    return g.db
-
-@app.teardown_appcontext
-def close_db(error):
-    if hasattr(g, 'db'):
-        g.db.close()
-
 @app.route('/editar_registro/<int:record_id>', methods=['GET', 'POST'])
+@login_required
 def editar_registro(record_id):
-    db = get_db()
-    pet_id = request.args.get('pet_id') or request.form.get('pet_id')
-    q = request.args.get('q') or request.form.get('q', '')
-    
-    if request.method == 'POST':
-        cur = db.cursor()
-        cur.execute('''
-            UPDATE clinical_records SET 
-                weight=?, height=?, temperature=?, dewormed=?, vaccinated=?, surgery=?, last_surgery=?
-            WHERE id=?
-        ''', (
-            float(request.form['weight']) if request.form['weight'] else None,
-            float(request.form['height']) if request.form['height'] else None,
-            float(request.form['temperature']) if request.form['temperature'] else None,
-            request.form['dewormed'] or None,
-            request.form['vaccinated'] or None,
-            request.form['surgery'],
-            request.form['last_surgery'] or None,
-            record_id
-        ))
-        db.commit()
-        flash('Registro actualizado')
-        return redirect(url_for('historial_clinico', petid=pet_id, q=q))
-    
-    cur = db.cursor()
-    cur.execute('SELECT * FROM clinical_records WHERE id=?', (record_id,))
-    record = cur.fetchone()
-    if not record:
-        flash('Registro no encontrado')
-        return redirect(url_for('historial_clinico', petid=pet_id, q=q))
-    
-    return render_template('editar_registro.html', record=dict(record), pet_id=pet_id, q=q)
+    db = SessionLocal()
+    try:
+        record = db.get(ClinicalRecord, record_id)
+        pet_id = request.args.get('pet_id') or request.form.get('pet_id')
+        q = request.args.get('q') or request.form.get('q', '')
+        
+        if not record:
+            flash('Registro no encontrado', 'error')
+            return redirect(url_for('historial_clinico', pet_id=pet_id, q=q))
 
+        if request.method == 'POST':
+            record.weight = float(request.form['weight']) if request.form['weight'] else None
+            record.height = float(request.form['height']) if request.form['height'] else None
+            record.temperature = float(request.form['temperature']) if request.form['temperature'] else None
+            record.dewormed = datetime.strptime(request.form['dewormed'], '%Y-%m-%d').date() if request.form['dewormed'] else None
+            record.vaccinated = datetime.strptime(request.form['vaccinated'], '%Y-%m-%d').date() if request.form['vaccinated'] else None
+            record.surgery = request.form['surgery']
+            record.last_surgery = datetime.strptime(request.form['last_surgery'], '%Y-%m-%d').date() if request.form['last_surgery'] else None
+            
+            db.commit()
+            flash('Registro actualizado', 'success')
+            return redirect(url_for('historial_clinico', pet_id=pet_id, q=q))
+        
+        return render_template('editar_registro.html', record=record, pet_id=pet_id, q=q)
+    finally:
+        db.close()
 
 @app.route('/eliminar_registro/<int:record_id>', methods=['POST'])
+@login_required
 def eliminar_registro(record_id):
-    db = get_db()
-    pet_id = request.form.get('pet_id')
-    q = request.form.get('q', '')
-    cur = db.cursor()
-    cur.execute('DELETE FROM clinical_records WHERE id=?', (record_id,))
-    db.commit()
-    flash('Registro eliminado')
-    return redirect(url_for('historial_clinico', pet_id=pet_id, q=q))
+    db = SessionLocal()
+    try:
+        pet_id = request.form.get('pet_id')
+        q = request.form.get('q', '')
+        record = db.get(ClinicalRecord, record_id)
+        if record:
+            db.delete(record)
+            db.commit()
+            flash('Registro eliminado', 'success')
+        return redirect(url_for('historial_clinico', pet_id=pet_id, q=q))
+    finally:
+        db.close()
 
 
 
@@ -1199,7 +1183,7 @@ def add_inventory():
 # ================== Routes: Sales ==================
 
 @app.route("/ventas/nueva", methods=["GET","POST"])
-#@login_required
+@login_required
 def nueva_venta():
     db = SessionLocal()
     try:
@@ -1295,7 +1279,7 @@ def ventas_interna():
 # ================== Eliminar item ==================
 
 @app.post("/ventas/<int:sale_id>/item/<int:item_id>/delete")
-#@login_required
+@login_required
 def venta_item_delete(sale_id, item_id):
     db = SessionLocal()
     try:
@@ -1309,6 +1293,7 @@ def venta_item_delete(sale_id, item_id):
 
 # ================== Finalizar venta ==================
 @app.post('/ventas/<int:sale_id>/finalizar')
+@login_required
 def ventafinalizar(sale_id):
     db = SessionLocal()
     try:
@@ -1371,15 +1356,15 @@ def ventafinalizar(sale_id):
             pass
 
         flash('Venta finalizada correctamente', 'success')
+        return redirect(url_for('ticket_print', sale_id=sale.id))
 
     except Exception as e:
         db.rollback()
         flash(f'Error: {e}', 'error')
+        return redirect(url_for('nueva_venta'))
 
     finally:
         db.close()
-
-    return redirect(url_for('dashboard'))
 
 
 # ================== Reportes ==================
@@ -1548,170 +1533,14 @@ def admin_config():
 
 # Hardware (Windows)
 IS_WINDOWS = platform.system() == "Windows"
-try:
-    import win32print, win32con
-except Exception:
-    win32print = None
-try:
-    import wmi as _wmi
-except Exception:
-    _wmi = None
-try:
-    from serial.tools import list_ports
-except Exception:
-    list_ports = None
-
-def hw_detect_printers():
-    names, default = [], None
-    if IS_WINDOWS and win32print:
-        try:
-            default = win32print.GetDefaultPrinter()
-            for flags in (win32print.PRINTER_ENUM_LOCAL, win32print.PRINTER_ENUM_CONNECTIONS):
-                for p in win32print.EnumPrinters(flags):
-                    names.append(p[2])
-            names = sorted(set(names))
-        except Exception:
-            pass
-    return default, names
-
-def hw_detect_com_ports():
-    if list_ports:
-        return [p.device for p in list_ports.comports()]
-    return []
-
-def hw_list_hid_hint():
-    hint = []
-    if IS_WINDOWS and _wmi:
-        try:
-            c = _wmi.WMI()
-            for d in c.Win32_PnPEntity(PNPClass="HIDClass"):
-                hint.append(d.Name)
-        except Exception:
-            pass
-    return hint
-
-def _send_raw_to_printer(data_bytes: bytes, printer_name: str = None):
-    if not (IS_WINDOWS and win32print):
-        raise RuntimeError("Impresión RAW solo en Windows con pywin32")
-    if not printer_name:
-        printer_name = win32print.GetDefaultPrinter()
-    hPrinter = win32print.OpenPrinter(printer_name)
-    try:
-        hJob = win32print.StartDocPrinter(hPrinter, 1, ("Prueba", None, "RAW"))
-        win32print.StartPagePrinter(hPrinter)
-        win32print.WritePrinter(hPrinter, data_bytes)
-        win32print.EndPagePrinter(hPrinter)
-        win32print.EndDocPrinter(hPrinter)
-    finally:
-        win32print.ClosePrinter(hPrinter)
-# ================== Templates routes end ==================
-# Hardware (Windows)
+# Hardware (Windows) - Eliminado para compatibilidad con Render
 IS_WINDOWS = platform.system() == "Windows"
-try:
-    import win32print, win32con
-except Exception:
-    win32print = None
-try:
-    import wmi as _wmi
-except Exception:
-    _wmi = None
-try:
-    from serial.tools import list_ports
-except Exception:
-    list_ports = None
-
-def hw_detect_printers():
-    names, default = [], None
-    if IS_WINDOWS and win32print:
-        try:
-            default = win32print.GetDefaultPrinter()
-            for flags in (win32print.PRINTER_ENUM_LOCAL, win32print.PRINTER_ENUM_CONNECTIONS):
-                for p in win32print.EnumPrinters(flags):
-                    names.append(p[2])
-            names = sorted(set(names))
-        except Exception:
-            pass
-    return default, names
-
-def hw_detect_com_ports():
-    if list_ports:
-        return [p.device for p in list_ports.comports()]
-    return []
-
-def hw_list_hid_hint():
-    hint = []
-    if IS_WINDOWS and _wmi:
-        try:
-            c = _wmi.WMI()
-            for d in c.Win32_PnPEntity(PNPClass="HIDClass"):
-                hint.append(d.Name)
-        except Exception:
-            pass
-    return hint
-
-def _send_raw_to_printer(data_bytes: bytes, printer_name: str = None):
-    if not (IS_WINDOWS and win32print):
-        raise RuntimeError("Impresión RAW solo en Windows con pywin32")
-    if not printer_name:
-        printer_name = win32print.GetDefaultPrinter()
-    hPrinter = win32print.OpenPrinter(printer_name)
-    try:
-        hJob = win32print.StartDocPrinter(hPrinter, 1, ("Prueba", None, "RAW"))
-        win32print.StartPagePrinter(hPrinter)
-        win32print.WritePrinter(hPrinter, data_bytes)
-        win32print.EndPagePrinter(hPrinter)
-        win32print.EndDocPrinter(hPrinter)
-    finally:
-        win32print.ClosePrinter(hPrinter)
 
 @app.route("/admin/hardware", methods=["GET"])
 @login_required
 @require_roles("admin")
 def admin_hardware():
-    default_prn, printers = hw_detect_printers()
-    coms = hw_detect_com_ports()
-    hid_list = hw_list_hid_hint()
-    return render_template("admin_hardware.html",
-        default_prn=default_prn, printers=printers,
-        coms=coms, hid_list=hid_list, is_windows=IS_WINDOWS)
-
-@app.post("/admin/hardware/print_test")
-@login_required
-@require_roles("admin")
-def hardware_print_test():
-    if not (IS_WINDOWS and win32print):
-        flash("Solo disponible en Windows con pywin32 instalado", "error")
-        return redirect(url_for("admin_hardware"))
-    prn = request.form.get("printer") or None
-    payload = (
-        b"EL ARCA DE CHARLY\r\n"
-        b"Prueba de impresora\r\n"
-        b"--------------------\r\n"
-        b"OK\r\n\r\n"
-        b"\x1D\x56\x42\x10"
-    )
-    try:
-        _send_raw_to_printer(payload, prn)
-        flash("Impresión enviada","success")
-    except Exception as e:
-        flash(f"Error imprimiendo: {e}", "error")
-    return redirect(url_for("admin_hardware"))
-
-@app.post("/admin/hardware/open_drawer")
-@login_required
-@require_roles("admin")
-def hardware_open_drawer():
-    if not (IS_WINDOWS and win32print):
-        flash("Solo disponible en Windows con pywin32 instalado", "error")
-        return redirect(url_for("admin_hardware"))
-    prn = request.form.get("printer") or None
-    pulse = b"\x1B\x70\x00\x3C\xFF"  # ESC p m t1 t2
-    try:
-        _send_raw_to_printer(pulse, prn)
-        flash("Pulso enviado (cajón)","success")
-    except Exception as e:
-        flash(f"Error abriendo cajón: {e}", "error")
-    return redirect(url_for("admin_hardware"))
+    return "Módulo de hardware no disponible en este entorno (Render/Linux).", 403
 
 # ================== NUEVAS RUTAS: Suppliers & Contacts ==================
 @app.route("/suppliers")
@@ -2129,48 +1958,40 @@ def backup_db():
 
     db.close()
 
-# ===============================
-# GOOGLE OAUTH LOGIN
-# ===============================
-oauth = OAuth(app)
-
-google = oauth.register(
-    name='google',
-    client_id=os.getenv("GOOGLE_CLIENT_ID"),
-    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-    access_token_url='https://oauth2.googleapis.com/token',
-    authorize_url='https://accounts.google.com/o/oauth2/auth',
-    api_base_url='https://www.googleapis.com/oauth2/v1/',
-    client_kwargs={'scope': 'openid email profile'},
-)
-
-@app.route("/login/google")
-def login_google():
-    redirect_uri = url_for("authorize_google", _external=True)
-    return google.authorize_redirect(redirect_uri)
-
-@app.route("/login/google/authorized")
-def authorize_google():
-    token = google.authorize_access_token()
-    resp = google.get("userinfo")
-    user_info = resp.json()
-
-    email = user_info.get("email")
-
+@app.route("/ticket/<int:sale_id>")
+@login_required
+def ticket_print(sale_id):
     db = SessionLocal()
     try:
-        user = db.query(User).filter_by(email=email).first()
-
-        if not user:
-            user = User(
-                email=email,
-                password_hash=""
-            )
-            db.add(user)
-            db.commit()
-
-        login_user(user)
+        sale = db.get(Sale, sale_id) or abort(404)
+        items = db.query(SaleItem).filter_by(sale_id=sale.id).options(joinedload(SaleItem.product)).all()
+        return render_template("ticket.html", sale=sale, items=items)
     finally:
         db.close()
 
-    return redirect(url_for("dashboard"))
+@app.route("/api/productos")
+@login_required
+def api_productos():
+    db = SessionLocal()
+    try:
+        q = (request.args.get("q") or "").strip()
+        if not q:
+            return jsonify([])
+        
+        # Buscar por nombre o código
+        items = db.query(Product).filter(
+            (Product.name.ilike(f"%{q}%")) | 
+            (Product.code.ilike(f"%{q}%"))
+        ).limit(10).all()
+        
+        return jsonify([{
+            "id": p.id,
+            "code": p.code,
+            "name": p.name,
+            "price": p.price,
+            "quantity": p.quantity
+        } for p in items])
+    finally:
+        db.close()
+
+# Google OAuth eliminado
