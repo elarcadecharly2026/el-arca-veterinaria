@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Selección de Servicio de Estética{% endblock %}
+{% block content %}
+<div style="max-width: 900px; margin: 40px auto; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h2 style="color: #0f172a; font-size: 32px; margin-bottom: 10px;">🧼 Servicios de Estética</h2>
+        <p style="color: #64748b;">Selecciona el tipo de servicio que deseas registrar para la mascota.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+        <!-- BAÑO ESTÁNDAR -->
+        <a href="{{ url_for('esteticaform_servicio', servicio='banos') }}" style="text-decoration: none;">
+            <div class="service-card">
+                <div class="icon">🧼</div>
+                <h3>Baño Estándar</h3>
+                <p>Limpieza profunda y secado.</p>
+            </div>
+        </a>
+
+        <!-- BAÑO MEDICADO -->
+        <a href="{{ url_for('esteticaform_servicio', servicio='banomedicado') }}" style="text-decoration: none;">
+            <div class="service-card">
+                <div class="icon">🧴</div>
+                <h3>Baño Medicado</h3>
+                <p>Tratamiento para la piel y pelaje.</p>
+            </div>
+        </a>
+
+        <!-- BAÑO DERMATOLÓGICO -->
+        <a href="{{ url_for('esteticaform_servicio', servicio='banodermatologico') }}" style="text-decoration: none;">
+            <div class="service-card">
+                <div class="icon">🩹</div>
+                <h3>Baño Dermatológico</h3>
+                <p>Cuidado especial para piel sensible.</p>
+            </div>
+        </a>
+
+        <!-- DESLANADO -->
+        <a href="{{ url_for('esteticaform_servicio', servicio='deslanado') }}" style="text-decoration: none;">
+            <div class="service-card">
+                <div class="icon">☁️</div>
+                <h3>Deslanado</h3>
+                <p>Eliminación de pelo muerto y nudos.</p>
+            </div>
+        </a>
+
+        <!-- CORTE DE PELO -->
+        <a href="{{ url_for('esteticaform_servicio', servicio='cortepelo') }}" style="text-decoration: none;">
+            <div class="service-card">
+                <div class="icon">✂️</div>
+                <h3>Corte de Pelo</h3>
+                <p>Estilo y recorte profesional.</p>
+            </div>
+        </a>
+
+        <!-- EXTRAS -->
+        <a href="{{ url_for('esteticaform_servicio', servicio='extras') }}" style="text-decoration: none;">
+            <div class="service-card">
+                <div class="icon">✨</div>
+                <h3>Servicios Extras</h3>
+                <p>Uñas, oídos y otros cuidados.</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+<style>
+    .service-card {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+        border: 1px solid #f1f5f9;
+        height: 100%;
+    }
+
+    .service-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border-color: #3b82f6;
+    }
+
+    .service-card .icon {
+        font-size: 50px;
+        margin-bottom: 15px;
+    }
+
+    .service-card h3 {
+        color: #1e293b;
+        margin-bottom: 10px;
+        font-size: 20px;
+    }
+
+    .service-card p {
+        color: #64748b;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    /* Ajuste para tema premium verde */
+    [href*="theme-premium.css"] ~ body .service-card:hover {
+        border-color: #10b981;
+    }
+</style>
+{% endblock %}

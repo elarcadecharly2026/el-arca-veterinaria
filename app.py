@@ -1747,36 +1747,9 @@ def contact_delete(sid, cid):
 
 
 @app.route('/estetica', methods=['GET', 'POST'])
+@login_required
 def estetica():
-    db = SessionLocal()
-    try:
-        # Maneja error de dogsize con fallback seguro
-        small, medium, large, xl = [], [], [], []
-        try:
-            small = db.query(Product).filter_by(dogsize='S').all()
-            medium = db.query(Product).filter_by(dogsize='M').all()
-            large = db.query(Product).filter_by(dogsize='L').all()
-            xl = db.query(Product).filter_by(dogsize='XL').all()
-        except Exception as e:
-            print(f"Error filtrando por dogsize: {e}")
-            # Fallback: todos los productos distribuidos
-            all_prods = db.query(Product).all()
-            # Divide arbitrariamente para no romper el template
-            total = len(all_prods)
-            small = all_prods[:total//4]
-            medium = all_prods[total//4:total//2]
-            large = all_prods[total//2:3*total//4]
-            xl = all_prods[3*total//4:]
-        
-        services = db.query(EsteticaService).order_by(EsteticaService.id.desc()).limit(10).all()
-
-        return render_template(
-            "estetica.html",
-            small=small, medium=medium, large=large, xl=xl,
-            services=services,
-        )
-    finally:
-        db.close()
+    return render_template('estetica_seleccion.html')
 
 
 
