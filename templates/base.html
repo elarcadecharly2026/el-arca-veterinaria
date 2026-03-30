@@ -56,12 +56,15 @@
 
   <!-- ESTETICA -->
   <div class="menu-item">
-    <a href="#" class="menu-toggle" onclick="toggleMenu('serv-menu', event)">
+    <a href="#" class="menu-toggle" onclick="toggleMenu('estetica-menu', event)">
       ✂️ Estética
     </a>
 
-    <div id="serv-menu" class="submenu">
-      <a href="{{ url_for('estetica_servicios') }}">Servicios</a>
+    <div id="estetica-menu" class="submenu">
+      <a href="{{ url_for('estetica') }}">🏠 Inicio Estética</a>
+      <a href="{{ url_for('estetica_servicios') }}">📋 Lista de Servicios</a>
+      <a href="{{ url_for('esteticaform_servicio', servicio='banos') }}">🧼 Baños</a>
+      <a href="{{ url_for('esteticaform_servicio', servicio='cortepelo') }}">✂️ Corte de Pelo</a>
     </div>
   </div>
 

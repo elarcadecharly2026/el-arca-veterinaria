@@ -8,26 +8,7 @@
   --acc:#211f3a;
   --acc2:#22c55e;
 }
-/* Login */
-body.login{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:linear-gradient(145deg, rgb(59 130 246 / 47%) 0%, #0f1a31 100%);
-}
-
-.login-card{
-  width:380px;
-  background:white;
-  border-radius:16px;
-  padding:25px;
-  box-shadow:0 20px 40px rgba(0,0,0,0.1);
-}
-
-.login-card h2{
-  margin-top:0;
-  text-align:center;
-}
+/* Login Styles Moved to Template for Specificity */
 
 /* Global */
 *{box-sizing:border-box}

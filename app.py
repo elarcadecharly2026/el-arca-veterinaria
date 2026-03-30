@@ -1536,11 +1536,34 @@ IS_WINDOWS = platform.system() == "Windows"
 # Hardware (Windows) - Eliminado para compatibilidad con Render
 IS_WINDOWS = platform.system() == "Windows"
 
-@app.route("/admin/hardware", methods=["GET"])
+@app.route("/admin/hardware", methods=["GET", "POST"])
 @login_required
 @require_roles("admin")
 def admin_hardware():
-    return "Módulo de hardware no disponible en este entorno (Render/Linux).", 403
+    db = SessionLocal()
+    try:
+        if request.method == "POST":
+            # Guardar configuraciones de hardware (puertos, etc)
+            for key in ["printer_port", "cash_drawer_command", "scanner_prefix"]:
+                val = request.form.get(key)
+                if val is not None:
+                    set_setting(db, key, val)
+            db.commit()
+            flash("Configuración de hardware guardada", "success")
+        
+        # Detectar si estamos en Render (Linux) o Local (Windows)
+        import platform
+        is_cloud = platform.system() != "Windows"
+        
+        settings = {
+            "printer_port": get_setting(db, "printer_port", "LPT1"),
+            "cash_drawer_command": get_setting(db, "cash_drawer_command", "27,112,0,25,250"),
+            "scanner_prefix": get_setting(db, "scanner_prefix", "")
+        }
+        
+        return render_template("admin_hardware.html", is_cloud=is_cloud, settings=settings)
+    finally:
+        db.close()
 
 # ================== NUEVAS RUTAS: Suppliers & Contacts ==================
 @app.route("/suppliers")

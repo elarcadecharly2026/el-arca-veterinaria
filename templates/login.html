@@ -1,35 +1,240 @@
 <!doctype html>
-<html>
+<html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/theme-arca.css') }}">
-<title>Entrar</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acceso - El Arca De Charly</title>
+  <style>
+    :root {
+      --primary-color: #048989; /* Turquesa oscuro estilo VetManager */
+      --secondary-color: #0f172a;
+      --text-light: #ffffff;
+      --text-dark: #1e293b;
+      --bg-light: #f8fafc;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .split-screen {
+      display: flex;
+      height: 100vh;
+      width: 100%;
+    }
+
+    /* LADO IZQUIERDO: BIENVENIDA */
+    .left-panel {
+      flex: 1.2;
+      background-color: var(--primary-color);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px;
+      color: var(--text-light);
+      text-align: center;
+    }
+
+    .left-panel h1 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+
+    .left-panel p {
+      font-size: 18px;
+      max-width: 500px;
+      line-height: 1.6;
+      opacity: 0.9;
+    }
+
+    /* LADO DERECHO: LOGIN */
+    .right-panel {
+      flex: 0.8;
+      background-color: var(--bg-light);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    .login-logo {
+      width: 120px;
+      height: auto;
+      margin-bottom: 10px;
+    }
+
+    .brand-name {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 5px;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 30px;
+    }
+
+    .login-title {
+      font-size: 28px;
+      color: var(--primary-color);
+      margin-bottom: 30px;
+      font-weight: 600;
+    }
+
+    .form-group {
+      text-align: left;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background-color: #f1f5f9;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      background-color: #fff;
+      box-shadow: 0 0 0 4px rgba(4, 137, 137, 0.1);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background-color: #81c7c7; /* Color turquesa claro del botón */
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .btn-login:hover {
+      background-color: var(--primary-color);
+      transform: translateY(-1px);
+    }
+
+    .forgot-password {
+      display: block;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #94a3b8;
+      text-decoration: none;
+    }
+
+    .version-tag {
+      margin-top: 40px;
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+
+    .flash-message {
+      background-color: #fee2e2;
+      color: #b91c1c;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      border: 1px solid #fecaca;
+    }
+
+    /* RESPONSIVIDAD */
+    @media (max-width: 1024px) {
+      .left-panel { padding: 40px; }
+      .left-panel h1 { font-size: 36px; }
+    }
+
+    @media (max-width: 768px) {
+      .split-screen { flex-direction: column; overflow-y: auto; }
+      .left-panel { flex: none; padding: 40px 20px; }
+      .right-panel { flex: none; padding: 40px 20px; }
+      .left-panel h1 { font-size: 28px; }
+      .left-panel p { font-size: 16px; }
+    }
+  </style>
 </head>
+<body>
 
-<body class="login">
+  <div class="split-screen">
+    <!-- LADO IZQUIERDO -->
+    <div class="left-panel">
+      <h1>Bienvenido a nuestra comunidad</h1>
+      <p>Con El Arca De Charly, gestiona tu clínica veterinaria de manera fácil y eficiente.</p>
+      <p style="margin-top: 20px; font-size: 14px;">Muchos veterinarios alrededor de México confían en nosotros.</p>
+    </div>
 
-  <div class="login-card">
-    <h2>El Arca De Charly</h2>
+    <!-- LADO DERECHO -->
+    <div class="right-panel">
+      <div class="login-box">
+        <img src="{{ url_for('static', filename='img/arca_logo.png') }}" alt="Logo" class="login-logo">
+        <div class="brand-name">El Arca De Charly</div>
+        <div class="brand-sub">Sistema Veterinario</div>
 
-    <form method="post">
-      <label>Usuario (email)</label>
-      <input type="email" name="email" required>
+        <h2 class="login-title">Inicio de Sesión</h2>
 
-      <label>Contraseña</label>
-      <input type="password" name="password" required>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash-message">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
-      <button>Entrar</button>
-    </form>
+        <form method="POST">
+          <div class="form-group">
+            <label for="email">Usuario *</label>
+            <input type="email" id="email" name="email" placeholder="admin@arca.local" required autofocus>
+          </div>
+          
+          <div class="form-group">
+            <label for="password">Contraseña *</label>
+            <input type="password" id="password" name="password" placeholder="••••••••" required>
+          </div>
 
-<!-- Inicio de sesión con Google eliminado -->
+          <button type="submit" class="btn-login">Entrar</button>
+        </form>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for cat,msg in messages %}
-        <div class="flash">{{ msg }}</div>
-      {% endfor %}
-    {% endwith %}
-
+        <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+        
+        <div class="version-tag">v8.1.0</div>
+      </div>
+    </div>
   </div>
 
 </body>
