@@ -15,9 +15,9 @@
       <div>
         <div class="name">{{ brand_name or 'El Arca De Charly' }}</div>
         <div class="sub">Sistema Veterinario</div>
-        <!-- BOTÓN VOLVER -->
+        <!-- BOTÓN VOLVER INTELIGENTE -->
         <div style="margin-top: 10px;">
-          <button onclick="window.history.back()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 5px;">
+          <button onclick="smartBack()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 5px;">
             ⬅️ Volver
           </button>
         </div>
@@ -70,6 +70,11 @@
       <a href="{{ url_for('estetica_servicios') }}">📋 Lista de Servicios</a>
       <a href="{{ url_for('esteticaform_servicio', servicio='banos') }}">🧼 Baños</a>
       <a href="{{ url_for('esteticaform_servicio', servicio='cortepelo') }}">✂️ Corte de Pelo</a>
+      <a href="{{ url_for('esteticaform_servicio', servicio='banomedicado') }}">🧴 Baño Medicado</a>
+      <a href="{{ url_for('esteticaform_servicio', servicio='banogarrapaticida') }}">🕷️ Baño Garrapaticida</a>
+      <a href="{{ url_for('esteticaform_servicio', servicio='banoseco') }}">💨 Baño en Seco</a>
+      <a href="{{ url_for('esteticaform_servicio', servicio='limpiezaoidos') }}">👂 Limpieza de Oídos</a>
+      <a href="{{ url_for('esteticaform_servicio', servicio='corteuñas') }}">💅 Corte de Uñas</a>
     </div>
   </div>
 
@@ -167,6 +172,21 @@
         if (link && link.getAttribute("href")) {
           window.location.href = link.getAttribute("href");
         }
+      }
+    }
+
+    // SCRIPT VOLVER INTELIGENTE
+    function smartBack() {
+      const path = window.location.pathname;
+      // Si estamos en un formulario de edición o creación, volvemos a la lista principal
+      if (path.includes('/edit') || path.includes('/new') || path.includes('/form')) {
+        if (path.includes('inventory')) window.location.href = "{{ url_for('inventory_list') }}";
+        else if (path.includes('cita')) window.location.href = "{{ url_for('citas') }}";
+        else if (path.includes('estetica')) window.location.href = "{{ url_for('estetica_servicios') }}";
+        else if (path.includes('pet')) window.location.href = "{{ url_for('historial_clinico') }}";
+        else window.history.back();
+      } else {
+        window.history.back();
       }
     }
 

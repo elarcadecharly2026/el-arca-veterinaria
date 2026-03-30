@@ -1,24 +1,27 @@
-/* TEMA PREMIUM VERDE - EL ARCA DE CHARLY */
+/* TEMA PREMIUM VERDE DIFUMINADO - EL ARCA DE CHARLY */
 :root {
-  --primary: #059669; /* Verde Esmeralda */
-  --primary-dark: #065f46;
-  --bg: #f0fdf4;
-  --sidebar-bg: #064e3b;
-  --text: #111827;
-  --accent: #10b981;
+  --primary: #10b981; /* Verde Esmeralda Suave */
+  --primary-dark: #059669;
+  --bg: #f8fafc;
+  --sidebar-bg: linear-gradient(180deg, #064e3b 0%, #065f46 100%);
+  --text: #1e293b;
+  --accent: #34d399;
+  --card-bg: rgba(255, 255, 255, 0.8);
 }
 
 * { box-sizing: border-box; }
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: var(--bg);
+  background: #f0fdf4; /* Fondo verde muy pálido */
+  background-image: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.1) 0, transparent 50%), 
+                    radial-gradient(at 50% 0%, rgba(52, 211, 153, 0.1) 0, transparent 50%);
   color: var(--text);
   display: flex;
   min-height: 100vh;
 }
 
-/* Sidebar */
+/* Sidebar con Glassmorphism */
 .sidebar {
   width: 260px;
   background: var(--sidebar-bg);
@@ -28,40 +31,46 @@ body {
   transition: transform 0.3s ease;
   z-index: 1000;
   overflow-y: auto;
+  box-shadow: 4px 0 15px rgba(0,0,0,0.1);
 }
 
 .sidebar .brand {
-  padding: 20px;
+  padding: 25px 20px;
   display: flex;
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-.sidebar .brand img { width: 45px; border-radius: 8px; }
-.sidebar .brand .name { font-weight: bold; font-size: 18px; }
-.sidebar .brand .sub { font-size: 11px; opacity: 0.7; }
+.sidebar .brand img { width: 50px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2); }
+.sidebar .brand .name { font-weight: 800; font-size: 18px; letter-spacing: -0.5px; }
+.sidebar .brand .sub { font-size: 11px; opacity: 0.8; font-weight: 500; }
 
 .menu a, .menu-toggle {
   display: block;
-  padding: 12px 20px;
-  color: rgba(255,255,255,0.8);
+  padding: 14px 20px;
+  color: rgba(255,255,255,0.85);
   text-decoration: none;
   font-size: 14px;
+  font-weight: 500;
   transition: all 0.2s;
 }
 
 .menu a:hover, .menu-toggle:hover {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.15);
   color: white;
+  padding-left: 25px;
 }
 
 .submenu {
-  background: rgba(0,0,0,0.2);
+  background: rgba(0,0,0,0.15);
   display: none;
+  margin: 5px 10px;
+  border-radius: 10px;
 }
 
-.submenu a { padding-left: 40px; font-size: 13px; }
+.submenu a { padding-left: 40px; font-size: 13px; opacity: 0.8; }
+.submenu a:hover { opacity: 1; background: transparent; }
 
 /* Main Content */
 .main {
@@ -72,49 +81,98 @@ body {
 }
 
 .topbar {
-  background: white;
-  height: 60px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  height: 70px;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 0 30px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  position: sticky;
+  top: 0;
+  z-index: 900;
 }
 
-.content { padding: 30px; }
+.content { padding: 40px; }
 
-/* UI Elements */
+/* UI Elements con Glassmorphism */
+.card, .panel-form-estetica, .login-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);
+  border: 1px solid rgba(255,255,255,0.5);
+}
+
 .btn {
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
   font-weight: 600;
-  transition: opacity 0.2s;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.btn-primary { background: var(--primary); color: white; }
-.btn-primary:hover { background: var(--primary-dark); }
+.btn-primary { 
+  background: var(--primary); 
+  color: white;
+  box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);
+}
+.btn-primary:hover { 
+  background: var(--primary-dark); 
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.23);
+}
 
-.card {
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+
+th {
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 1px;
+  padding: 15px;
+}
+
+td {
   background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  padding: 15px;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
 }
+
+td:first-child { border-left: 1px solid #f1f5f9; border-radius: 12px 0 0 12px; }
+td:last-child { border-right: 1px solid #f1f5f9; border-radius: 0 12px 12px 0; }
 
 /* Forms */
-.form label { display: block; margin-bottom: 8px; font-weight: 500; }
+.form label { display: block; margin-bottom: 10px; font-weight: 600; color: #475569; font-size: 14px; }
 .form input, .form select, .form textarea {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  margin-bottom: 15px;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  transition: border-color 0.2s;
+  background: white;
 }
+
+.form input:focus { border-color: var(--primary); outline: none; }
 
 /* Responsive */
 @media (max-width: 768px) {
   .sidebar { transform: translateX(-100%); }
   .sidebar.active { transform: translateX(0); }
   .main { margin-left: 0; }
+  .content { padding: 20px; }
 }

@@ -345,10 +345,15 @@ def cita_nueva():
             db.commit()  # ← IMPORTANTE: COMMIT PRIMERO
 
             # 3. AHORA SÍ mandar WhatsApp (cita ya existe)
-            enviar_recordatorio_whatsapp(cita, db)
+            # enviar_recordatorio_whatsapp(cita, db) # Desactivado para usar el botón manual en la confirmación
 
-            flash("✅ Cita creada y recordatorio enviado.", "success")
-            return redirect(url_for("citas"))
+            flash("✅ Cita creada con éxito.", "success")
+            # Cargar datos necesarios para la confirmación
+            cita_full = (db.query(AppointmentBase)
+                        .options(joinedload(AppointmentBase.pet).joinedload(Pet.owner))
+                        .filter(AppointmentBase.id == cita.id)
+                        .first())
+            return render_template("cita_confirmacion.html", cita=cita_full)
 
         return render_template("cita_form.html", pets=pets)
     except Exception as e:

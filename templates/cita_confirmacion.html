@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Cita Confirmada{% endblock %}
+{% block content %}
+<div style="max-width: 600px; margin: 50px auto; text-align: center; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+    <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
+    <h2 style="color: #0f172a; margin-bottom: 10px;">¡Cita Registrada con Éxito!</h2>
+    <p style="color: #64748b; margin-bottom: 30px;">La cita para <b>{{ cita.pet.name }}</b> ha sido guardada. ¿Qué deseas hacer ahora?</p>
+
+    <div style="display: flex; flex-direction: column; gap: 15px;">
+        <!-- WhatsApp -->
+        {% set wa_msg = "Hola " ~ (cita.pet.owner.name if cita.pet and cita.pet.owner else 'Cliente') ~ ", te recordamos tu cita para " ~ (cita.pet.name if cita.pet else 'tu mascota') ~ " el día " ~ cita.date.strftime('%d/%m/%Y') ~ " a las " ~ cita.date.strftime('%I:%M %p') ~ ". ¡Te esperamos en El Arca De Charly!" %}
+        <a href="https://wa.me/{{ cita.pet.owner.phone if cita.pet and cita.pet.owner and cita.pet.owner.phone else '' }}?text={{ wa_msg|urlencode }}" target="_blank" 
+           style="background: #25D366; color: white; padding: 15px; border-radius: 12px; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px;">
+           📲 Enviar Recordatorio por WhatsApp
+        </a>
+
+        <!-- Google Calendar -->
+        {% set gcal_start = cita.date.strftime('%Y%m%dT%H%M%S') %}
+        {% set gcal_end = cita.date.strftime('%Y%m%dT%H%M%S') %}
+        <a href="https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+Veterinaria:+{{ cita.pet.name }}&dates={{ gcal_start }}/{{ gcal_end }}&details={{ cita.tipo }}:+{{ cita.motivo }}&location=El+Arca+De+Charly&sf=true&output=xml" target="_blank"
+           style="background: #4285F4; color: white; padding: 15px; border-radius: 12px; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px;">
+           📅 Agendar en Google Calendar
+        </a>
+
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+
+        <a href="{{ url_for('citas') }}" style="color: #64748b; text-decoration: none; font-weight: 500;">
+            Ir al listado de citas
+        </a>
+    </div>
+</div>
+{% endblock %}
