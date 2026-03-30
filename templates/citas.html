@@ -41,16 +41,24 @@
                   </div>
                   <div class="btn-group" role="group">
     <!-- WhatsApp -->
-    {% set wa_msg = "Hola " ~ (cita.pet.owner.name if cita.pet and cita.pet.owner else 'Cliente') ~ ", te recordamos tu cita para " ~ (cita.pet.name if cita.pet else 'tu mascota') ~ " el día " ~ cita.date.strftime('%d/%m/%Y') ~ " a las " ~ cita.date.strftime('%I:%M %p') ~ ". ¡Te esperamos en El Arca De Charly!" %}
-    <a href="https://wa.me/{{ cita.pet.owner.phone if cita.pet and cita.pet.owner and cita.pet.owner.phone else '' }}?text={{ wa_msg|urlencode }}" target="_blank" class="btn btn-sm btn-outline-success" title="Enviar WhatsApp">
+    <!-- WhatsApp -->
+    {% set pet_name = cita.pet.name if (cita.pet and cita.pet.name) else 'tu mascota' %}
+    {% set owner_name = cita.pet.owner.name if (cita.pet and cita.pet.owner and cita.pet.owner.name) else 'Cliente' %}
+    {% set cita_date = cita.date.strftime('%d/%m/%Y') if cita.date else '' %}
+    {% set cita_time = cita.date.strftime('%I:%M %p') if cita.date else '' %}
+    {% set wa_phone = cita.pet.owner.phone if (cita.pet and cita.pet.owner and cita.pet.owner.phone) else '' %}
+    
+    {% set wa_msg = "Hola " ~ owner_name ~ ", te recordamos tu cita para " ~ pet_name ~ " el día " ~ cita_date ~ " a las " ~ cita_time ~ ". ¡Te esperamos en El Arca De Charly!" %}
+    
+    <a href="https://wa.me/{{ wa_phone }}?text={{ wa_msg|urlencode }}" target="_blank" class="btn btn-sm btn-outline-success" title="Enviar WhatsApp">
         <i class="fab fa-whatsapp"></i> WhatsApp
     </a>
 
     <!-- Google Calendar -->
-    {% set gcal_start = cita.date.strftime('%Y%m%dT%H%M%S') %}
-    {% set gcal_end = (cita.date).strftime('%Y%m%dT%H%M%S') %}
-    {% set gcal_attendees = cita.pet.owner.email if cita.pet and cita.pet.owner and cita.pet.owner.email else '' %}
-    <a href="https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+Veterinaria:+{{ cita.pet.name if cita.pet else 'Mascota' }}&dates={{ gcal_start }}/{{ gcal_end }}&details={{ cita.tipo }}&location=El+Arca+De+Charly&add={{ gcal_attendees }}&sf=true&output=xml" target="_blank" class="btn btn-sm btn-outline-primary" title="Añadir a Google Calendar">
+    {% set gcal_start = cita.date.strftime('%Y%m%dT%H%M%S') if cita.date else '' %}
+    {% set gcal_end = cita.date.strftime('%Y%m%dT%H%M%S') if cita.date else '' %}
+    {% set gcal_attendees = cita.pet.owner.email if (cita.pet and cita.pet.owner and cita.pet.owner.email) else '' %}
+    <a href="https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+Veterinaria:+{{ pet_name }}&dates={{ gcal_start }}/{{ gcal_end }}&details={{ cita.tipo }}&location=El+Arca+De+Charly&add={{ gcal_attendees }}&sf=true&output=xml" target="_blank" class="btn btn-sm btn-outline-primary" title="Añadir a Google Calendar">
         <i class="far fa-calendar-plus"></i> Google
     </a>
 
