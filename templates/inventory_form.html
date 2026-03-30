@@ -17,13 +17,8 @@
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
 
         <div>
-            <label>🧾 Clave SAT</label>
-            <select name="sat_key">
-                <option value="">-- Seleccionar --</option>
-                <option value="H87" {% if item and item.sat_key == 'H87' %}selected{% endif %}>H87 - Pieza</option>
-                <option value="E48" {% if item and item.sat_key == 'E48' %}selected{% endif %}>E48 - Servicio</option>
-                <option value="KGM" {% if item and item.sat_key == 'KGM' %}selected{% endif %}>KGM - Kilogramo</option>
-            </select>
+            <label>🧾 Clave SAT (Manual)</label>
+            <input type="text" name="sat_key" value="{{ item.sat_key if item else '' }}" placeholder="Ej: H87, E48, etc.">
         </div>
 
     </div>

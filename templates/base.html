@@ -15,6 +15,12 @@
       <div>
         <div class="name">{{ brand_name or 'El Arca De Charly' }}</div>
         <div class="sub">Sistema Veterinario</div>
+        <!-- BOTÓN VOLVER -->
+        <div style="margin-top: 10px;">
+          <button onclick="window.history.back()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 5px;">
+            ⬅️ Volver
+          </button>
+        </div>
       </div>
     </div>
    <nav class="menu">
@@ -178,6 +184,28 @@
           !menuBtn.contains(event.target) && 
           sidebar.classList.contains('active')) {
         sidebar.classList.remove('active');
+      }
+    });
+
+    // SCRIPT NAVEGACIÓN CON ENTER (EVITAR ENVÍO ACCIDENTAL)
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+        const form = e.target.form;
+        if (form) {
+          const index = Array.prototype.indexOf.call(form, e.target);
+          // Buscar el siguiente elemento que sea un input o select y no esté oculto
+          for (let i = index + 1; i < form.elements.length; i++) {
+            const next = form.elements[i];
+            if ((next.tagName === 'INPUT' || next.tagName === 'SELECT' || next.tagName === 'TEXTAREA') && 
+                next.type !== 'hidden' && !next.disabled) {
+              next.focus();
+              e.preventDefault();
+              return;
+            }
+          }
+          // Si es el último campo, no enviamos automáticamente para evitar errores
+          e.preventDefault();
+        }
       }
     });
 
