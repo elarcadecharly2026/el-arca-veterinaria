@@ -68,13 +68,7 @@
 
     <div id="estetica-menu" class="submenu">
       <a href="{{ url_for('estetica_servicios') }}">📋 Lista de Servicios</a>
-      <a href="{{ url_for('esteticaform_servicio', servicio='banos') }}">🧼 Baños</a>
-      <a href="{{ url_for('esteticaform_servicio', servicio='cortepelo') }}">✂️ Corte de Pelo</a>
-      <a href="{{ url_for('esteticaform_servicio', servicio='banomedicado') }}">🧴 Baño Medicado</a>
-      <a href="{{ url_for('esteticaform_servicio', servicio='banogarrapaticida') }}">🕷️ Baño Garrapaticida</a>
-      <a href="{{ url_for('esteticaform_servicio', servicio='banoseco') }}">💨 Baño en Seco</a>
-      <a href="{{ url_for('esteticaform_servicio', servicio='limpiezaoidos') }}">👂 Limpieza de Oídos</a>
-      <a href="{{ url_for('esteticaform_servicio', servicio='corteuñas') }}">💅 Corte de Uñas</a>
+      <a href="javascript:void(0)" onclick="openEsteticaModal()">🧼 Baños y Servicios</a>
     </div>
   </div>
 
@@ -110,7 +104,120 @@
     </section>
   </main>
 
+  <!-- MODAL FLOTANTE DE ESTÉTICA -->
+  <div id="esteticaModal" class="modal-overlay" onclick="closeEsteticaModal(event)">
+    <div class="modal-content-arca" onclick="event.stopPropagation()">
+      <div class="modal-header-arca">
+        <h3>🧼 Selecciona un Servicio</h3>
+        <button class="close-btn-arca" onclick="closeEsteticaModal()">×</button>
+      </div>
+      <div class="modal-grid-arca">
+        <a href="{{ url_for('esteticaform_servicio', servicio='banos') }}" class="modal-item-arca">
+          <span class="modal-icon-arca">🧼</span>
+          <span class="modal-text-arca">Baño Estándar</span>
+        </a>
+        <a href="{{ url_for('esteticaform_servicio', servicio='banomedicado') }}" class="modal-item-arca">
+          <span class="modal-icon-arca">🧴</span>
+          <span class="modal-text-arca">Baño Medicado</span>
+        </a>
+        <a href="{{ url_for('esteticaform_servicio', servicio='banodermatologico') }}" class="modal-item-arca">
+          <span class="modal-icon-arca">🩹</span>
+          <span class="modal-text-arca">Baño Dermatológico</span>
+        </a>
+        <a href="{{ url_for('esteticaform_servicio', servicio='deslanado') }}" class="modal-item-arca">
+          <span class="modal-icon-arca">☁️</span>
+          <span class="modal-text-arca">Deslanado</span>
+        </a>
+        <a href="{{ url_for('esteticaform_servicio', servicio='cortepelo') }}" class="modal-item-arca">
+          <span class="modal-icon-arca">✂️</span>
+          <span class="modal-text-arca">Corte de Pelo</span>
+        </a>
+        <a href="{{ url_for('esteticaform_servicio', servicio='extras') }}" class="modal-item-arca">
+          <span class="modal-icon-arca">✨</span>
+          <span class="modal-text-arca">Servicios Extras</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
   <style>
+    /* ESTILOS MODAL FLOTANTE */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content-arca {
+      background: white;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 25px;
+      padding: 30px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      animation: modalFadeIn 0.3s ease-out;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .modal-header-arca {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 15px;
+    }
+    .modal-header-arca h3 { margin: 0; color: #1e293b; font-size: 22px; }
+    .close-btn-arca {
+      background: none;
+      border: none;
+      font-size: 30px;
+      cursor: pointer;
+      color: #64748b;
+    }
+    .modal-grid-arca {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+    .modal-item-arca {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 15px;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: 1px solid #e2e8f0;
+    }
+    .modal-item-arca:hover {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      transform: translateY(-3px);
+    }
+    .modal-icon-arca { font-size: 35px; margin-bottom: 10px; }
+    .modal-text-arca { color: #1e293b; font-weight: 600; font-size: 14px; }
+
+    /* Ajuste para tema premium verde */
+    [href*="theme-premium.css"] ~ body .modal-item-arca:hover {
+      background: #ecfdf5;
+      border-color: #10b981;
+    }
+    [href*="theme-premium.css"] ~ body .modal-content-arca {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+    }
     .menu-toggle {
       padding: 10px;
       display: block;
@@ -188,6 +295,14 @@
       } else {
         window.history.back();
       }
+    }
+
+    // SCRIPT MODAL ESTÉTICA
+    function openEsteticaModal() {
+      document.getElementById('esteticaModal').style.display = 'flex';
+    }
+    function closeEsteticaModal(event) {
+      document.getElementById('esteticaModal').style.display = 'none';
     }
 
     // SCRIPT SIDEBAR MÓVIL
