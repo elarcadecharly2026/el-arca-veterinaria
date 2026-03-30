@@ -74,6 +74,11 @@
         <button type="button" class="btn-servicio" onclick="agregarServicio('{{ titulo }}', 400)">$400</button>
         <button type="button" class="btn-servicio" onclick="agregarServicio('{{ titulo }}', 500)">$500</button>
         <button type="button" class="btn-servicio" onclick="agregarServicio('{{ titulo }}', 550)">$550</button>
+        
+        <div style="display: flex; align-items: center; gap: 10px; margin: 10px;">
+          <input type="number" id="precio_manual" placeholder="Precio manual" style="width: 120px; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+          <button type="button" class="btn-servicio" style="margin: 0; padding: 10px 20px;" onclick="const p = document.getElementById('precio_manual').value; if(p > 0) agregarServicio('{{ titulo }} (Manual)', p); else alert('Ingresa un precio válido');">➕ Añadir</button>
+        </div>
       </div>
 
       <h3>Servicios seleccionados</h3>
