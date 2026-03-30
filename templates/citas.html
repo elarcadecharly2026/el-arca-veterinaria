@@ -4,7 +4,6 @@
 
 {% block content %}
 <div class="container-fluid">
-  <!-- Barra de pestañas igual que tu captura -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0">Calendario</h2>
     <div class="btn-group" role="group">
@@ -16,65 +15,72 @@
     </div>
   </div>
 
-  <!-- Contenido pestaña Citas (visible por defecto) -->
   <div id="tab-citas" class="tab-content active">
     <div class="row">
       <div class="col-12">
         <div class="card">
-          
           <div class="card-body">
             <div class="list-group list-group-flush">
               {% if citas %}
                 {% for cita in citas %}
-              <div class="list-group-item d-flex justify-content-between align-items-center">
-    <div>
-    <div class="fw-bold">
-      {{ cita.date.strftime('%I:%M %p') }}
-      <span class="text-muted">({{ cita.duration }} min)</span>
-    </div>
-    <small class="text-muted">
-      {{ cita.tipo }} para <b>{{ cita.pet.name if cita.pet else 'Sin mascota' }}</b>
-      {% if cita.pet and cita.pet.owner %}
-        <br>📞 {{ cita.pet.owner.phone or 'Sin tel' }} | 📧 {{ cita.pet.owner.email or 'Sin email' }}
-      {% endif %}
-    </small>
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <div class="fw-bold">
+                      {% if cita.date %}
+                        {{ cita.date.strftime('%I:%M %p') }}
+                      {% else %}
+                        Sin hora
+                      {% endif %}
+                      <span class="text-muted">({{ cita.duration or 0 }} min)</span>
+                    </div>
+                    <small class="text-muted">
+                      {{ cita.tipo or 'Consulta' }} para 
+                      <b>
+                        {% if cita.pet %}
+                          {{ cita.pet.name }}
+                        {% else %}
+                          Sin mascota
+                        {% endif %}
+                      </b>
+                      {% if cita.pet and cita.pet.owner %}
+                        <br>📞 {{ cita.pet.owner.phone or 'Sin tel' }} | 📧 {{ cita.pet.owner.email or 'Sin email' }}
+                      {% endif %}
+                    </small>
                   </div>
+                  
                   <div class="btn-group" role="group">
-    <!-- WhatsApp -->
-    <!-- WhatsApp -->
-    {% set pet_name = cita.pet.name if (cita.pet and cita.pet.name) else 'tu mascota' %}
-    {% set owner_name = cita.pet.owner.name if (cita.pet and cita.pet.owner and cita.pet.owner.name) else 'Cliente' %}
-    {% set cita_date = cita.date.strftime('%d/%m/%Y') if cita.date else '' %}
-    {% set cita_time = cita.date.strftime('%I:%M %p') if cita.date else '' %}
-    {% set wa_phone = cita.pet.owner.phone if (cita.pet and cita.pet.owner and cita.pet.owner.phone) else '' %}
-    
-    {% set wa_msg = "Hola " ~ owner_name ~ ", te recordamos tu cita para " ~ pet_name ~ " el día " ~ cita_date ~ " a las " ~ cita_time ~ ". ¡Te esperamos en El Arca De Charly!" %}
-    
-    <a href="https://wa.me/{{ wa_phone }}?text={{ wa_msg|urlencode }}" target="_blank" class="btn btn-sm btn-outline-success" title="Enviar WhatsApp">
-        <i class="fab fa-whatsapp"></i> WhatsApp
-    </a>
+                    <!-- WhatsApp -->
+                    {% set pet_name = cita.pet.name if (cita.pet and cita.pet.name) else 'tu mascota' %}
+                    {% set owner_name = cita.pet.owner.name if (cita.pet and cita.pet.owner and cita.pet.owner.name) else 'Cliente' %}
+                    {% set cita_date = cita.date.strftime('%d/%m/%Y') if cita.date else '' %}
+                    {% set cita_time = cita.date.strftime('%I:%M %p') if cita.date else '' %}
+                    {% set wa_phone = cita.pet.owner.phone if (cita.pet and cita.pet.owner and cita.pet.owner.phone) else '' %}
+                    
+                    {% set wa_msg = "Hola " ~ owner_name ~ ", te recordamos tu cita para " ~ pet_name ~ " el día " ~ cita_date ~ " a las " ~ cita_time ~ ". ¡Te esperamos en El Arca De Charly!" %}
+                    
+                    <a href="https://wa.me/{{ wa_phone }}?text={{ wa_msg|urlencode }}" target="_blank" class="btn btn-sm btn-outline-success" title="Enviar WhatsApp">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </a>
 
-    <!-- Google Calendar -->
-    {% set gcal_start = cita.date.strftime('%Y%m%dT%H%M%S') if cita.date else '' %}
-    {% set gcal_end = cita.date.strftime('%Y%m%dT%H%M%S') if cita.date else '' %}
-    {% set gcal_attendees = cita.pet.owner.email if (cita.pet and cita.pet.owner and cita.pet.owner.email) else '' %}
-    <a href="https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+Veterinaria:+{{ pet_name }}&dates={{ gcal_start }}/{{ gcal_end }}&details={{ cita.tipo }}&location=El+Arca+De+Charly&add={{ gcal_attendees }}&sf=true&output=xml" target="_blank" class="btn btn-sm btn-outline-primary" title="Añadir a Google Calendar">
-        <i class="far fa-calendar-plus"></i> Google
-    </a>
+                    <!-- Google Calendar -->
+                    {% set gcal_start = cita.date.strftime('%Y%m%dT%H%M%S') if cita.date else '' %}
+                    {% set gcal_end = cita.date.strftime('%Y%m%dT%H%M%S') if cita.date else '' %}
+                    {% set gcal_attendees = cita.pet.owner.email if (cita.pet and cita.pet.owner and cita.pet.owner.email) else '' %}
+                    <a href="https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+Veterinaria:+{{ pet_name }}&dates={{ gcal_start }}/{{ gcal_end }}&details={{ cita.tipo or 'Cita' }}&location=El+Arca+De+Charly&add={{ gcal_attendees }}&sf=true&output=xml" target="_blank" class="btn btn-sm btn-outline-primary" title="Añadir a Google Calendar">
+                        <i class="far fa-calendar-plus"></i> Google
+                    </a>
 
-    <a href="{{ url_for('citaeditar', citaid=cita.id) }}" class="btn btn-sm btn-outline-secondary">
-        <i class="fas fa-edit"></i> Editar
-    </a>
-    <!-- Formulario para eliminar -->
-    <form method="post" action="{{ url_for('cita_delete', cita_id=cita.id) }}" style="display: inline;" 
-          onsubmit="return confirm('¿Eliminar esta cita? Se perderá el recordatorio.')">
-        <button type="submit" class="btn btn-sm btn-outline-danger">
-            <i class="fas fa-trash"></i> Eliminar
-        </button>
-    </form>
-</div>
-
-
+                    <a href="{{ url_for('citaeditar', citaid=cita.id) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    
+                    <form method="post" action="{{ url_for('cita_delete', cita_id=cita.id) }}" style="display: inline;" 
+                          onsubmit="return confirm('¿Eliminar esta cita?')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </form>
+                  </div>
                 </div>
                 {% endfor %}
               {% else %}
@@ -91,63 +97,28 @@
     </div>
   </div>
 
-  <!-- Contenido pestaña Recordatorios (oculto por defecto) -->
   <div id="tab-recordatorios" class="tab-content">
     <div class="alert alert-info">
       <i class="fas fa-info-circle"></i>
       Los recordatorios se envían automáticamente por WhatsApp al crear/editar citas.
     </div>
-    <!-- Aquí podrías listar recordatorios enviados si agregas un modelo para eso -->
   </div>
 </div>
 
 <style>
-.tab-content {
-  display: none;
-}
-.tab-content.active {
-  display: block;
-}
-.btn-group button.active {
-  background-color: #0d6efd;
-  color: white;
-}
-.card-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
-}
-.list-group-item {
-  border: none;
-  padding: 1rem 0;
-  border-bottom: 1px solid #eee;
-}
-.list-group-item:last-child {
-  border-bottom: none;
-}
-
-/* 🔥 MEJORAS NUEVAS */
-.fw-bold {
-  font-size: 18px;
-}
-
-.text-muted {
-  font-size: 14px;
-}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.btn-group button.active { background-color: #0d6efd; color: white; }
+.list-group-item { border: none; padding: 1rem 0; border-bottom: 1px solid #eee; }
+.list-group-item:last-child { border-bottom: none; }
+.fw-bold { font-size: 18px; }
+.text-muted { font-size: 14px; }
 </style>
-
-
 
 <script>
 function showTab(tabName) {
-  // Ocultar todas las pestañas
-  document.querySelectorAll('.tab-content').forEach(tab => {
-    tab.classList.remove('active');
-  });
-  document.querySelectorAll('.btn-group button').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  
-  // Mostrar pestaña seleccionada
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.btn-group button').forEach(btn => btn.classList.remove('active'));
   document.getElementById('tab-' + tabName).classList.add('active');
   event.target.classList.add('active');
 }

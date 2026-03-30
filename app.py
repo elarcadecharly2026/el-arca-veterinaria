@@ -305,12 +305,9 @@ Base.metadata.create_all(engine) #<--IMPORTANTE
 def citas():
     db = SessionLocal()
     try:
-        # ← AQUÍ ESTÁ LA MAGIA: carga pet.owner en UNA consulta
-        citas = (db.query(AppointmentBase)
-                .options(joinedload(AppointmentBase.pet).joinedload(Pet.owner))
-                .order_by(AppointmentBase.date.asc())
-                .all())
-        return render_template("citas.html", citas=citas)
+        # Consulta simplificada para evitar errores de relación
+        citas_list = db.query(AppointmentBase).order_by(AppointmentBase.date.asc()).all()
+        return render_template("citas.html", citas=citas_list)
     finally:
         db.close()
 
